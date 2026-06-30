@@ -64,7 +64,7 @@ Bạn cần tạo một Database D1 thật trên Cloudflare:
    ```
    Lệnh này thực thi `wrangler d1 create cms-db`. Kết quả trả về sẽ cho bạn 3 thông số: `database_name`, `database_id` và thông tin bind.
 
-2. Cập nhật file `wrangler.jsonc` (hoặc `wrangler.toml` nếu có) ở thư mục gốc, thay thế phần binding D1 bằng `database_id` vừa nhận được:
+2. Mở file `wrangler.jsonc` ở thư mục gốc. Block `d1_databases` đã có sẵn. Bạn chỉ việc thay thế giá trị của trường `database_id` bằng id thật bạn vừa nhận được ở bước 1:
    ```json
    {
      "d1_databases": [
