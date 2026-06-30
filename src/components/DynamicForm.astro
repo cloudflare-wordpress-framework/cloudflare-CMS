@@ -1,0 +1,97 @@
+---
+import schemaRaw from '../../forms/user.schema.json';
+
+export interface Props {
+  schemaPath: string;
+  action: string;
+  method?: string;
+  submitLabel?: string;
+}
+
+const { schemaPath, action, method = 'POST', submitLabel = 'Submit' } = Astro.props;
+
+// Load the schema (Hardcoded for now to avoid fs module issues in Cloudflare Pages)
+// In a more generic setup you might use Vite's glob import or similar
+const schema = schemaRaw;
+
+const properties = schema.properties;
+const requiredFields = schema.required || [];
+
+function getInputType(propName: string, propDetails: any) {
+  if (propName === 'email') return 'email';
+  if (propName === 'password') return 'password';
+  if (propDetails.format === 'date') return 'date';
+  if (propDetails.type === 'string') return 'text';
+  return 'text'; // Fallback
+}
+---
+
+<form action={action} method={method} class="dynamic-form">
+  {Object.entries(properties).map(([propName, propDetails]: [string, any]) => {
+    // Skip internal fields that users shouldn't edit directly
+    if (propName === 'id' || propName === 'firebase_uid' || propName === 'created_at') return null;
+
+    const isRequired = requiredFields.includes(propName);
+    const inputType = getInputType(propName, propDetails);
+
+    return (
+      <div class="form-group">
+        <label for={propName}>
+          {propDetails.description || propDetails.title || propName}
+          {isRequired && <span class="required">*</span>}
+        </label>
+
+        {propDetails.enum ? (
+          <select id={propName} name={propName} required={isRequired}>
+            {propDetails.enum.map((option: string) => (
+              <option value={option}>{option}</option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={inputType}
+            id={propName}
+            name={propName}
+            required={isRequired}
+          />
+        )}
+      </div>
+    );
+  })}
+
+  <button type="submit">{submitLabel}</button>
+</form>
+
+<style>
+  .dynamic-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .required {
+    color: red;
+  }
+  input, select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  button {
+    padding: 0.75rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+</style>

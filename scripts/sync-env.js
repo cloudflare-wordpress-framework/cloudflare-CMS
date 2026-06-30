@@ -44,7 +44,9 @@ if (env.COMPATIBILITY_DATE) {
 }
 
 if (!wranglerConfig.d1_databases) {
-  wranglerConfig.d1_databases = [{}];
+  wranglerConfig.d1_databases = [{}, {}];
+} else if (wranglerConfig.d1_databases.length < 2) {
+  wranglerConfig.d1_databases.push({});
 }
 
 if (env.D1_BINDING) {
@@ -61,6 +63,22 @@ if (env.D1_REMOTE === 'true') {
   wranglerConfig.d1_databases[0].remote = true;
 } else if (env.D1_REMOTE === 'false') {
   delete wranglerConfig.d1_databases[0].remote;
+}
+
+if (env.USER_DB_BINDING) {
+  wranglerConfig.d1_databases[1].binding = env.USER_DB_BINDING;
+}
+if (env.USER_DB_DATABASE_NAME) {
+  wranglerConfig.d1_databases[1].database_name = env.USER_DB_DATABASE_NAME;
+}
+if (env.USER_DB_DATABASE_ID) {
+  wranglerConfig.d1_databases[1].database_id = env.USER_DB_DATABASE_ID;
+}
+
+if (env.USER_DB_REMOTE === 'true') {
+  wranglerConfig.d1_databases[1].remote = true;
+} else if (env.USER_DB_REMOTE === 'false') {
+  delete wranglerConfig.d1_databases[1].remote;
 }
 
 fs.writeFileSync(wranglerFile, JSON.stringify(wranglerConfig, null, '\t') + '\n', 'utf-8');

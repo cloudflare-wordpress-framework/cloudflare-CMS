@@ -1,0 +1,84 @@
+---
+// src/pages/login.astro
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login / Register</title>
+</head>
+<body>
+  <main>
+    <h1>Login or Register</h1>
+
+    <div class="auth-container">
+      <div id="login-form">
+        <h2>Email/Password</h2>
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button id="btn-login">Login</button>
+        <button id="btn-register">Register</button>
+      </div>
+
+      <div class="divider">OR</div>
+
+      <button id="btn-google">Login with Google</button>
+    </div>
+
+    <p id="auth-message" style="color: red;"></p>
+  </main>
+
+  <script>
+    import { auth } from '../lib/firebase/client';
+    import {
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup
+    } from 'firebase/auth';
+
+    const emailInput = document.getElementById('email') as HTMLInputElement;
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const loginBtn = document.getElementById('btn-login');
+    const registerBtn = document.getElementById('btn-register');
+    const googleBtn = document.getElementById('btn-google');
+    const msgEl = document.getElementById('auth-message')!;
+
+    const handleAuth = async (action: 'login' | 'register') => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      try {
+        if (action === 'login') {
+          await signInWithEmailAndPassword(auth, email, password);
+        } else {
+          await createUserWithEmailAndPassword(auth, email, password);
+        }
+        window.location.href = '/profile';
+      } catch (error: any) {
+        msgEl.textContent = error.message;
+      }
+    };
+
+    loginBtn?.addEventListener('click', () => handleAuth('login'));
+    registerBtn?.addEventListener('click', () => handleAuth('register'));
+
+    googleBtn?.addEventListener('click', async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+        window.location.href = '/profile';
+      } catch (error: any) {
+         msgEl.textContent = error.message;
+      }
+    });
+  </script>
+
+  <style>
+    main { max-width: 400px; margin: 2rem auto; text-align: center; }
+    .auth-container { display: flex; flex-direction: column; gap: 1rem; }
+    input, button { padding: 0.5rem; margin-bottom: 0.5rem; width: 100%; box-sizing: border-box; }
+    .divider { margin: 1rem 0; font-weight: bold; }
+  </style>
+</body>
+</html>

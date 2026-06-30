@@ -1,0 +1,89 @@
+---
+// src/pages/profile.astro
+import DynamicForm from '../components/DynamicForm.astro';
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Profile</title>
+</head>
+<body>
+  <main>
+    <h1>Your Profile</h1>
+    <p id="user-info">Loading user info...</p>
+
+    <div id="profile-form-container" style="display: none;">
+        <h2>Edit Additional Info</h2>
+        <!-- The form action will be intercepted by client-side JS to include Firebase Token -->
+        <DynamicForm
+          schemaPath="forms/user.schema.json"
+          action="/api/user"
+          method="POST"
+          submitLabel="Save Profile"
+        />
+    </div>
+
+    <button id="btn-logout" style="margin-top: 2rem;">Logout</button>
+  </main>
+
+  <script>
+    import { auth } from '../lib/firebase/client';
+    import { onAuthStateChanged, signOut } from 'firebase/auth';
+
+    const userInfoEl = document.getElementById('user-info')!;
+    const formContainer = document.getElementById('profile-form-container')!;
+    const logoutBtn = document.getElementById('btn-logout');
+    const form = document.querySelector('form.dynamic-form') as HTMLFormElement;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        userInfoEl.textContent = `Logged in as: ${user.email}`;
+        formContainer.style.display = 'block';
+
+        // Pre-fill form if we had a GET endpoint, for now just handle submit
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            // Get ID token to authenticate with our backend
+            const idToken = await user.getIdToken();
+
+            try {
+                const response = await fetch('/api/user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Profile updated successfully!');
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message}`);
+                }
+            } catch (err) {
+                alert('Failed to update profile.');
+            }
+        });
+
+      } else {
+        window.location.href = '/login';
+      }
+    });
+
+    logoutBtn?.addEventListener('click', () => {
+      signOut(auth);
+    });
+  </script>
+
+  <style>
+    main { max-width: 600px; margin: 2rem auto; padding: 1rem; }
+  </style>
+</body>
+</html>
