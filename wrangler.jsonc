@@ -10,5 +10,12 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "cms-db",
+			"database_id": "local-setup-only-replace-on-production"
+		}
+	]
 }
