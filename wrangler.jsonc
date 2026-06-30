@@ -15,16 +15,9 @@
 	},
 	"d1_databases": [
 		{
-<<<<<<< HEAD
 			"binding": "cms_db",
 			"database_name": "cms-db",
-			"database_id": "55197eed-6d31-4280-8967-98bddec66199",
-			"remote": true
-=======
-			"binding": "DB",
-			"database_name": "cms-db",
-			"database_id": "local-setup-only-replace-on-production"
->>>>>>> 7cb8bfddfdd6e050196b7daf42c67567036887cb
+			"database_id": "55197eed-6d31-4280-8967-98bddec66199"
 		}
 	]
 }
