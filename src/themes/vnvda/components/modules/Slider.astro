@@ -1,0 +1,239 @@
+---
+interface Slide {
+    image: string;
+    title?: string;
+    description?: string;
+    link?: string;
+}
+
+interface Props {
+    slides: Slide[];
+    autoplay?: boolean;
+    interval?: number;
+}
+
+const { slides = [], autoplay = true, interval = 5000 } = Astro.props;
+---
+
+<div class="slider-module" data-autoplay={String(autoplay)} data-interval={interval}>
+    <div class="slider-container">
+        {slides.map((slide, index) => (
+            <div class={`slide ${index === 0 ? 'active' : ''}`}>
+                {slide.link ? (
+                    <a href={slide.link}>
+                        <img src={slide.image} alt={slide.title || 'Slide image'} />
+                    </a>
+                ) : (
+                    <img src={slide.image} alt={slide.title || 'Slide image'} />
+                )}
+                {(slide.title || slide.description) && (
+                    <div class="slide-caption">
+                        {slide.title && <h3>{slide.title}</h3>}
+                        {slide.description && <p>{slide.description}</p>}
+                    </div>
+                )}
+            </div>
+        ))}
+    </div>
+
+    {slides.length > 1 && (
+        <>
+            <button class="slider-btn prev" aria-label="Previous slide">&#10094;</button>
+            <button class="slider-btn next" aria-label="Next slide">&#10095;</button>
+            <div class="slider-dots">
+                {slides.map((_, index) => (
+                    <span class={`dot ${index === 0 ? 'active' : ''}`} data-index={index}></span>
+                ))}
+            </div>
+        </>
+    )}
+</div>
+
+<style>
+    .slider-module {
+        position: relative;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        overflow: hidden;
+        background: #f0f0f0;
+        border-radius: 8px;
+    }
+
+    .slider-container {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+        height: 100%;
+    }
+
+    .slide {
+        min-width: 100%;
+        position: relative;
+    }
+
+    .slide img {
+        width: 100%;
+        display: block;
+        object-fit: cover;
+        aspect-ratio: 16/9; /* Tỉ lệ phổ biến cho banner */
+        max-height: 500px;
+    }
+
+    .slide-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .slide-caption h3 {
+        margin: 0 0 10px;
+        font-size: 1.5rem;
+    }
+
+    .slide-caption p {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .slider-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        padding: 15px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: background 0.3s;
+        z-index: 10;
+    }
+
+    .slider-btn:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    .prev { left: 0; border-radius: 0 4px 4px 0; }
+    .next { right: 0; border-radius: 4px 0 0 4px; }
+
+    .slider-dots {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .dot.active {
+        background: white;
+    }
+
+    @media (max-width: 768px) {
+        .slide img {
+            aspect-ratio: 4/3;
+        }
+        .slide-caption h3 {
+            font-size: 1.2rem;
+        }
+        .slider-btn {
+            padding: 10px;
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<script>
+    class Slider {
+        constructor(element) {
+            this.slider = element;
+            this.container = element.querySelector('.slider-container');
+            this.slides = element.querySelectorAll('.slide');
+            this.dots = element.querySelectorAll('.dot');
+            this.prevBtn = element.querySelector('.prev');
+            this.nextBtn = element.querySelector('.next');
+
+            this.currentIndex = 0;
+            this.totalSlides = this.slides.length;
+            this.autoplay = element.dataset.autoplay === 'true';
+            this.interval = parseInt(element.dataset.interval) || 5000;
+            this.timer = null;
+
+            if (this.totalSlides <= 1) return;
+
+            this.init();
+        }
+
+        init() {
+            if (this.prevBtn) this.prevBtn.addEventListener('click', () => this.prev());
+            if (this.nextBtn) this.nextBtn.addEventListener('click', () => this.next());
+
+            this.dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => this.goTo(index));
+            });
+
+            if (this.autoplay) {
+                this.startAutoplay();
+                this.slider.addEventListener('mouseenter', () => this.stopAutoplay());
+                this.slider.addEventListener('mouseleave', () => this.startAutoplay());
+            }
+        }
+
+        updateUI() {
+            this.container.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+
+            this.dots.forEach((dot, index) => {
+                if (index === this.currentIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        next() {
+            this.currentIndex = (this.currentIndex + 1) % this.totalSlides;
+            this.updateUI();
+        }
+
+        prev() {
+            this.currentIndex = (this.currentIndex - 1 + this.totalSlides) % this.totalSlides;
+            this.updateUI();
+        }
+
+        goTo(index) {
+            this.currentIndex = index;
+            this.updateUI();
+        }
+
+        startAutoplay() {
+            if (this.timer) clearInterval(this.timer);
+            this.timer = setInterval(() => this.next(), this.interval);
+        }
+
+        stopAutoplay() {
+            if (this.timer) clearInterval(this.timer);
+        }
+    }
+
+    // Initialize all sliders on the page
+    document.addEventListener('DOMContentLoaded', () => {
+        const sliders = document.querySelectorAll('.slider-module');
+        sliders.forEach(sliderEl => new Slider(sliderEl));
+    });
+</script>
