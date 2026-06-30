@@ -1,0 +1,84 @@
+---
+---
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column info">
+                <h3>Hội Bệnh Mạch Máu Việt Nam</h3>
+                <p>Website chính thức của Hội Bệnh Mạch Máu Việt Nam (VNVDA).</p>
+                <p>Địa chỉ: Hà Nội, Việt Nam</p>
+                <p>Email: contact@vnvda.com</p>
+            </div>
+            <div class="footer-column links">
+                <h3>Liên kết nhanh</h3>
+                <ul>
+                    <li><a href="/">Trang chủ</a></li>
+                    <li><a href="#">Giới thiệu</a></li>
+                    <li><a href="#">Hoạt động</a></li>
+                    <li><a href="#">Nghiên cứu khoa học</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {new Date().getFullYear()} Hội Bệnh Mạch Máu Việt Nam. Đã đăng ký bản quyền.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer {
+        background-color: #f8f9fa;
+        color: var(--vnvda-text);
+        padding: 40px 0 20px;
+        margin-top: auto;
+        border-top: 4px solid var(--vnvda-blue);
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    .footer-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+    .footer-column {
+        flex: 1;
+        min-width: 250px;
+    }
+    .footer-column h3 {
+        color: var(--vnvda-blue);
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+    }
+    .footer-column p {
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
+    .links ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .links li {
+        margin-bottom: 10px;
+    }
+    .links a {
+        color: var(--vnvda-text);
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+    .links a:hover {
+        color: var(--vnvda-blue);
+    }
+    .footer-bottom {
+        border-top: 1px solid #ddd;
+        padding-top: 20px;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #666;
+    }
+</style>

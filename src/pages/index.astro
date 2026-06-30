@@ -1,17 +1,185 @@
 ---
+import Layout from '../themes/vnvda/layouts/Layout.astro';
+import Header from '../themes/vnvda/components/Header.astro';
+import Footer from '../themes/vnvda/components/Footer.astro';
+import Slider from '../themes/vnvda/components/modules/Slider.astro';
 
+const slideData = [
+	{
+		image: 'https://vnvda.com/wp-content/uploads/2024/05/banner-vnvda.jpg',
+		title: 'Hội Bệnh Mạch Máu Việt Nam',
+		description: 'Chào mừng đến với trang thông tin chính thức của Hội Bệnh Mạch Máu Việt Nam'
+	},
+	{
+		image: 'https://vnvda.com/wp-content/uploads/2024/05/hinh-anh-hoi-nghi.jpg',
+		title: 'Hội nghị khoa học',
+		description: 'Cập nhật kiến thức và tiến bộ mới nhất trong lĩnh vực bệnh mạch máu'
+	}
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Trang chủ | Hội Bệnh Mạch Máu Việt Nam">
+	<Header />
+
+	<main>
+		<section class="hero-section">
+			<Slider slides={slideData} autoplay={true} interval={6000} />
+		</section>
+
+		<section class="about-section">
+			<div class="container">
+				<div class="about-content">
+					<h2>Về chúng tôi</h2>
+					<p>Hội Bệnh Mạch Máu Việt Nam (VNVDA) là tổ chức xã hội - nghề nghiệp của các cá nhân, tổ chức hoạt động trong lĩnh vực chuyên ngành bệnh mạch máu và các chuyên ngành có liên quan tại Việt Nam.</p>
+					<a href="#" class="btn-readmore">Xem thêm</a>
+				</div>
+			</div>
+		</section>
+
+		<section class="news-section">
+			<div class="container">
+				<h2>Tin tức & Sự kiện nổi bật</h2>
+				<div class="news-grid">
+					<article class="news-card">
+						<div class="news-img" style="background-color: #ddd; height: 200px;"></div>
+						<div class="news-info">
+							<h3><a href="#">Hội nghị Khoa học thường niên</a></h3>
+							<p class="date">15/05/2024</p>
+							<p>Thông tin chi tiết về hội nghị khoa học chuyên ngành bệnh mạch máu...</p>
+						</div>
+					</article>
+					<article class="news-card">
+						<div class="news-img" style="background-color: #ddd; height: 200px;"></div>
+						<div class="news-info">
+							<h3><a href="#">Đào tạo liên tục (CME)</a></h3>
+							<p class="date">10/05/2024</p>
+							<p>Chương trình đào tạo cập nhật kiến thức mới nhất cho các hội viên...</p>
+						</div>
+					</article>
+					<article class="news-card">
+						<div class="news-img" style="background-color: #ddd; height: 200px;"></div>
+						<div class="news-info">
+							<h3><a href="#">Nghiên cứu khoa học mới</a></h3>
+							<p class="date">01/05/2024</p>
+							<p>Công bố các công trình nghiên cứu nổi bật trong lĩnh vực mạch máu...</p>
+						</div>
+					</article>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<Footer />
+</Layout>
+
+<style>
+	main {
+		flex: 1;
+	}
+
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 15px;
+	}
+
+	section {
+		padding: 40px 0;
+	}
+
+	.hero-section {
+		padding: 20px 0 40px;
+	}
+
+	h2 {
+		color: var(--vnvda-blue);
+		text-align: center;
+		margin-bottom: 30px;
+		font-size: 2rem;
+		text-transform: uppercase;
+	}
+
+	/* About Section */
+	.about-section {
+		background-color: #f9f9f9;
+	}
+	.about-content {
+		max-width: 800px;
+		margin: 0 auto;
+		text-align: center;
+	}
+	.about-content p {
+		font-size: 1.1rem;
+		line-height: 1.6;
+		margin-bottom: 20px;
+	}
+	.btn-readmore {
+		display: inline-block;
+		background-color: var(--vnvda-blue);
+		color: white;
+		padding: 10px 25px;
+		text-decoration: none;
+		border-radius: 4px;
+		font-weight: 600;
+		transition: background-color 0.3s;
+	}
+	.btn-readmore:hover {
+		background-color: #003d82;
+	}
+
+	/* News Section */
+	.news-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 30px;
+	}
+	.news-card {
+		background: white;
+		border-radius: 8px;
+		overflow: hidden;
+		box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+		transition: transform 0.3s;
+	}
+	.news-card:hover {
+		transform: translateY(-5px);
+	}
+	.news-img {
+		width: 100%;
+		background-size: cover;
+		background-position: center;
+	}
+	.news-info {
+		padding: 20px;
+	}
+	.news-info h3 {
+		margin: 0 0 10px;
+		font-size: 1.2rem;
+	}
+	.news-info h3 a {
+		color: var(--vnvda-text);
+		text-decoration: none;
+		transition: color 0.3s;
+	}
+	.news-info h3 a:hover {
+		color: var(--vnvda-blue);
+	}
+	.date {
+		color: #777;
+		font-size: 0.9rem;
+		margin-bottom: 10px;
+	}
+	.news-info p {
+		margin: 0;
+		color: #555;
+		line-height: 1.5;
+	}
+
+	@media (max-width: 768px) {
+		h2 {
+			font-size: 1.5rem;
+		}
+		section {
+			padding: 30px 0;
+		}
+	}
+</style>
