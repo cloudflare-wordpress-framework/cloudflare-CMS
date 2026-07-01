@@ -20,8 +20,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const token = authHeader.split('Bearer ')[1];
   const env = (locals as any).runtime?.env;
 
-  if (!env || !env.USER_DB) {
-      console.error("USER_DB binding not found. Check wrangler.jsonc and env.");
+  if (!env || !env.DB) {
+      console.error("DB binding not found. Check wrangler.jsonc and env.");
       return new Response(JSON.stringify({ message: 'Database configuration error' }), { status: 500 });
   }
 
@@ -77,7 +77,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return new Response(JSON.stringify({ message: validation.error }), { status: 400 });
   }
 
-  const db = env.USER_DB;
+  const db = env.DB;
 
   try {
       const existingUser = await db.prepare('SELECT id FROM users WHERE firebase_uid = ?')

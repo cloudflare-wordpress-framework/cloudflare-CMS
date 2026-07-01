@@ -1,5 +1,5 @@
 ---
-// src/pages/profile.astro
+// src/pages/account.astro
 import DynamicForm from '../components/DynamicForm.astro';
 ---
 
@@ -7,21 +7,21 @@ import DynamicForm from '../components/DynamicForm.astro';
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>User Profile</title>
+  <title>User Account</title>
 </head>
 <body>
   <main>
-    <h1>Your Profile</h1>
+    <h1>Your Account</h1>
     <p id="user-info">Loading user info...</p>
 
     <div id="profile-form-container" style="display: none;">
-        <h2>Edit Additional Info</h2>
+        <h2>Update Profile Info</h2>
         <!-- The form action will be intercepted by client-side JS to include Firebase Token -->
         <DynamicForm
           schemaPath="forms/user.schema.json"
           action="/api/user"
           method="POST"
-          submitLabel="Save Profile"
+          submitLabel="Save Account"
         />
     </div>
 
@@ -42,16 +42,16 @@ import DynamicForm from '../components/DynamicForm.astro';
         userInfoEl.textContent = `Logged in as: ${user.email}`;
         formContainer.style.display = 'block';
 
-        // Pre-fill form if we had a GET endpoint, for now just handle submit
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
-            // Get ID token to authenticate with our backend
+            // Extract the token using user.getIdToken()
             const idToken = await user.getIdToken();
 
             try {
+                // Pass it to the backend via the Authorization header as a Bearer token
                 const response = await fetch('/api/user', {
                     method: 'POST',
                     headers: {
@@ -62,13 +62,13 @@ import DynamicForm from '../components/DynamicForm.astro';
                 });
 
                 if (response.ok) {
-                    alert('Profile updated successfully!');
+                    alert('Account updated successfully!');
                 } else {
                     const errorData = await response.json();
                     alert(`Error: ${errorData.message}`);
                 }
             } catch (err) {
-                alert('Failed to update profile.');
+                alert('Failed to update account.');
             }
         });
 

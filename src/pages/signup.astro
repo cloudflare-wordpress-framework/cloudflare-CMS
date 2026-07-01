@@ -1,27 +1,24 @@
 ---
-// src/pages/login.astro
+// src/pages/signup.astro
 ---
 
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login</title>
+  <title>Sign Up</title>
 </head>
 <body>
   <main>
-    <h1>Login</h1>
+    <h1>Sign Up</h1>
 
     <div class="auth-container">
-      <div id="login-form">
+      <div id="signup-form">
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
-        <button id="btn-login">Login</button>
+        <button id="btn-register">Create Account</button>
       </div>
-      <p>Don't have an account? <a href="/signup">Sign up</a></p>
-
-      <div class="divider">OR</div>
-      <button id="btn-google">Login with Google</button>
+      <p>Already have an account? <a href="/login">Login</a></p>
     </div>
 
     <p id="auth-message" style="color: red;"></p>
@@ -29,36 +26,21 @@
 
   <script>
     import { auth } from '../lib/firebase/client';
-    import {
-      signInWithEmailAndPassword,
-      GoogleAuthProvider,
-      signInWithPopup
-    } from 'firebase/auth';
+    import { createUserWithEmailAndPassword } from 'firebase/auth';
 
     const emailInput = document.getElementById('email') as HTMLInputElement;
     const passwordInput = document.getElementById('password') as HTMLInputElement;
-    const loginBtn = document.getElementById('btn-login');
-    const googleBtn = document.getElementById('btn-google');
+    const registerBtn = document.getElementById('btn-register');
     const msgEl = document.getElementById('auth-message')!;
 
-    loginBtn?.addEventListener('click', async () => {
+    registerBtn?.addEventListener('click', async () => {
       const email = emailInput.value;
       const password = passwordInput.value;
       try {
-        await signInWithEmailAndPassword(auth, email, password);
+        await createUserWithEmailAndPassword(auth, email, password);
         window.location.href = '/account';
       } catch (error: any) {
         msgEl.textContent = error.message;
-      }
-    });
-
-    googleBtn?.addEventListener('click', async () => {
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-        window.location.href = '/account';
-      } catch (error: any) {
-         msgEl.textContent = error.message;
       }
     });
   </script>
@@ -67,7 +49,6 @@
     main { max-width: 400px; margin: 2rem auto; text-align: center; }
     .auth-container { display: flex; flex-direction: column; gap: 1rem; }
     input, button { padding: 0.5rem; margin-bottom: 0.5rem; width: 100%; box-sizing: border-box; }
-    .divider { margin: 1rem 0; font-weight: bold; }
   </style>
 </body>
 </html>

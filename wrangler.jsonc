@@ -18,11 +18,6 @@
 			"binding": "DB",
 			"database_name": "cms-db",
 			"database_id": "local-setup-only-replace-on-production"
-		},
-		{
-			"binding": "USER_DB",
-			"database_name": "user-db",
-			"database_id": "local-setup-only-replace-on-production"
 		}
 	]
 }
