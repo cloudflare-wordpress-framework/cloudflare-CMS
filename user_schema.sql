@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS users (
   full_name TEXT,
   birthdate DATE,
   workplace TEXT,
+  avatar TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

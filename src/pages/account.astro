@@ -23,6 +23,17 @@ import DynamicForm from '../components/DynamicForm.astro';
           method="POST"
           submitLabel="Save Account"
         />
+
+        <hr style="margin: 2rem 0;" />
+
+        <h2>Change Password</h2>
+        <form id="password-form" class="dynamic-form" style="margin-bottom: 2rem;">
+          <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" name="new-password" required minlength="6" />
+          </div>
+          <button type="submit">Update Password</button>
+        </form>
     </div>
 
     <button id="btn-logout" style="margin-top: 2rem;">Logout</button>
@@ -30,12 +41,13 @@ import DynamicForm from '../components/DynamicForm.astro';
 
   <script>
     import { auth } from '../lib/firebase/client';
-    import { onAuthStateChanged, signOut } from 'firebase/auth';
+    import { onAuthStateChanged, signOut, updatePassword } from 'firebase/auth';
 
     const userInfoEl = document.getElementById('user-info')!;
     const formContainer = document.getElementById('profile-form-container')!;
     const logoutBtn = document.getElementById('btn-logout');
     const form = document.querySelector('form.dynamic-form') as HTMLFormElement;
+    const passwordForm = document.getElementById('password-form') as HTMLFormElement;
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -69,6 +81,19 @@ import DynamicForm from '../components/DynamicForm.astro';
                 }
             } catch (err) {
                 alert('Failed to update account.');
+            }
+        });
+
+        passwordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = (document.getElementById('new-password') as HTMLInputElement).value;
+
+            try {
+                await updatePassword(user, newPassword);
+                alert('Password updated successfully!');
+                passwordForm.reset();
+            } catch (err: any) {
+                alert(`Failed to update password: ${err.message}`);
             }
         });
 

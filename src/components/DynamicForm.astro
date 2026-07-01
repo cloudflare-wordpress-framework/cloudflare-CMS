@@ -29,7 +29,7 @@ function getInputType(propName: string, propDetails: any) {
 <form action={action} method={method} class="dynamic-form">
   {Object.entries(properties).map(([propName, propDetails]: [string, any]) => {
     // Skip internal fields that users shouldn't edit directly
-    if (propName === 'id' || propName === 'firebase_uid' || propName === 'created_at') return null;
+    if (propName === 'id' || propName === 'firebase_uid' || propName === 'created_at' || propName === 'role') return null;
 
     const isRequired = requiredFields.includes(propName);
     const inputType = getInputType(propName, propDetails);

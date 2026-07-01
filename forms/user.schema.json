@@ -10,6 +10,7 @@
     "full_name": { "type": "string", "description": "Full Name" },
     "birthdate": { "type": "string", "format": "date", "description": "Birthdate (YYYY-MM-DD)" },
     "workplace": { "type": "string", "description": "Place of Work" },
+    "avatar": { "type": "string", "description": "Avatar URL", "format": "uri" },
     "created_at": { "type": "string", "format": "date-time", "description": "Creation Timestamp" }
   },
   "required": ["id", "firebase_uid", "email", "role"]

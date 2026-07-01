@@ -79,6 +79,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   const db = env.DB;
 
+  // Role-based Access Control
+  const adminEmails = (import.meta.env.ADMIN_EMAILS || '').split(',').map((e: string) => e.trim());
+  const editorEmails = (import.meta.env.EDITOR_EMAILS || '').split(',').map((e: string) => e.trim());
+
+  let computedRole = 'user';
+  if (adminEmails.includes(email)) {
+      computedRole = 'admin';
+  } else if (editorEmails.includes(email)) {
+      computedRole = 'editor';
+  }
+
   try {
       const existingUser = await db.prepare('SELECT id FROM users WHERE firebase_uid = ?')
                                    .bind(uid)
@@ -89,27 +100,30 @@ export const POST: APIRoute = async ({ request, locals }) => {
               UPDATE users SET
               full_name = COALESCE(?, full_name),
               birthdate = COALESCE(?, birthdate),
-              workplace = COALESCE(?, workplace)
+              workplace = COALESCE(?, workplace),
+              avatar = COALESCE(?, avatar),
+              role = ?
               WHERE firebase_uid = ?
           `;
           await db.prepare(updateQuery)
-                  .bind(data.full_name || null, data.birthdate || null, data.workplace || null, uid)
+                  .bind(data.full_name || null, data.birthdate || null, data.workplace || null, data.avatar || null, computedRole, uid)
                   .run();
       } else {
           const newId = crypto.randomUUID();
           const insertQuery = `
-              INSERT INTO users (id, firebase_uid, email, role, full_name, birthdate, workplace)
-              VALUES (?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO users (id, firebase_uid, email, role, full_name, birthdate, workplace, avatar)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           `;
           await db.prepare(insertQuery)
                   .bind(
                       newId,
                       uid,
                       email,
-                      data.role || 'user',
+                      computedRole,
                       data.full_name || null,
                       data.birthdate || null,
-                      data.workplace || null
+                      data.workplace || null,
+                      data.avatar || null
                   )
                   .run();
       }
