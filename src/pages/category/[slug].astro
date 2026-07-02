@@ -1,0 +1,158 @@
+---
+import Layout from '../../themes/vnvda/layouts/Layout.astro';
+import Header from '../../themes/vnvda/components/Header.astro';
+import Footer from '../../themes/vnvda/components/Footer.astro';
+
+const { slug } = Astro.params;
+
+let category = null;
+let dbPosts = [];
+
+try {
+    // @ts-ignore
+    const db = Astro.locals.runtime.env.DB;
+    if (db) {
+        category = await db.prepare('SELECT * FROM categories WHERE slug = ?').bind(slug).first();
+
+        if (category) {
+            // Note: Current schema doesn't have post_categories, assuming posts can be fetched by some relation
+            // As a fallback for this demo, we'll fetch all posts if category matches or just use a generic query
+            // Since the schema has post_tags but not post_categories, we'll pretend it's matching a tag or just fetch all
+            // For a robust implementation, a category_id should be added to the posts table.
+            const { results } = await db.prepare('SELECT * FROM posts WHERE status = ? ORDER BY published_at DESC LIMIT 20').bind('published').all();
+            dbPosts = results;
+        }
+    }
+} catch (e) {
+    console.error('Error fetching data from D1:', e);
+}
+
+// Fetch posts from markdown (simplistic category matching based on folder or frontmatter)
+const mdPosts = await Astro.glob('../posts/*.md');
+const parsedMdPosts = mdPosts
+    .filter(p => p.frontmatter.category === slug || !p.frontmatter.category) // simplistic filter
+    .map(p => ({
+        title: p.frontmatter.title,
+        slug: p.frontmatter.slug || p.file.split('/').pop()?.replace('.md', ''),
+        excerpt: p.frontmatter.excerpt,
+        published_at: p.frontmatter.published_at,
+        image: p.frontmatter.image,
+    }));
+
+// Combine and sort
+const allPosts = [...dbPosts, ...parsedMdPosts].sort((a, b) => {
+    return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
+});
+
+if (!category) {
+    // Fallback if category not in DB but we want to show it
+    category = { name: slug?.replace(/-/g, ' ').toUpperCase(), slug };
+}
+
+function formatDate(dateString: string) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+---
+
+<Layout title={`Chuyên mục: ${category.name} | Hội Bệnh Mạch Máu Việt Nam`}>
+	<Header />
+
+	<main class="category-page">
+		<div class="container">
+			<h1>Chuyên mục: {category.name}</h1>
+
+            {allPosts.length > 0 ? (
+                <div class="news-grid">
+                    {allPosts.map(post => (
+                        <article class="news-card">
+                            {post.image ? (
+                                <div class="news-img" style={`background-image: url(${post.image}); height: 200px;`}></div>
+                            ) : (
+                                <div class="news-img" style="background-color: #ddd; height: 200px;"></div>
+                            )}
+                            <div class="news-info">
+                                <h3><a href={`/posts/${post.slug}`}>{post.title}</a></h3>
+                                <p class="date">{formatDate(post.published_at)}</p>
+                                <p>{post.excerpt}</p>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            ) : (
+                <p>Chưa có bài viết nào trong chuyên mục này.</p>
+            )}
+		</div>
+	</main>
+
+	<Footer />
+</Layout>
+
+<style>
+    main {
+        flex: 1;
+    }
+    .category-page {
+        padding: 40px 0;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    h1 {
+        color: var(--vnvda-blue);
+        margin-bottom: 30px;
+        font-size: 2rem;
+        border-bottom: 2px solid var(--vnvda-blue);
+        padding-bottom: 10px;
+        display: inline-block;
+    }
+    .news-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 30px;
+	}
+	.news-card {
+		background: white;
+		border-radius: 8px;
+		overflow: hidden;
+		box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+		transition: transform 0.3s;
+	}
+	.news-card:hover {
+		transform: translateY(-5px);
+	}
+	.news-img {
+		width: 100%;
+		background-size: cover;
+		background-position: center;
+	}
+	.news-info {
+		padding: 20px;
+	}
+	.news-info h3 {
+		margin: 0 0 10px;
+		font-size: 1.2rem;
+	}
+	.news-info h3 a {
+		color: var(--vnvda-text);
+		text-decoration: none;
+		transition: color 0.3s;
+	}
+	.news-info h3 a:hover {
+		color: var(--vnvda-blue);
+	}
+	.date {
+		color: #777;
+		font-size: 0.9rem;
+		margin-bottom: 10px;
+	}
+	.news-info p {
+		margin: 0;
+		color: #555;
+		line-height: 1.5;
+	}
+</style>
+export const prerender = false;

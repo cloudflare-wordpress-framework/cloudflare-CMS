@@ -1,0 +1,132 @@
+---
+export interface Props {
+    title?: string;
+    posts?: any[];
+}
+
+const { title = 'Tin tức & Sự kiện nổi bật', posts = [] } = Astro.props;
+
+// Mock data if no posts provided
+const displayPosts = posts.length > 0 ? posts : [
+    {
+        title: 'Hội nghị Khoa học thường niên',
+        slug: 'hoi-nghi-khoa-hoc-thuong-nien',
+        excerpt: 'Thông tin chi tiết về hội nghị khoa học chuyên ngành bệnh mạch máu...',
+        published_at: '2024-05-15T00:00:00Z',
+        image: ''
+    },
+    {
+        title: 'Đào tạo liên tục (CME)',
+        slug: 'dao-tao-lien-tuc-cme',
+        excerpt: 'Chương trình đào tạo cập nhật kiến thức mới nhất cho các hội viên...',
+        published_at: '2024-05-10T00:00:00Z',
+        image: ''
+    },
+    {
+        title: 'Nghiên cứu khoa học mới',
+        slug: 'nghien-cuu-khoa-hoc-moi',
+        excerpt: 'Công bố các công trình nghiên cứu nổi bật trong lĩnh vực mạch máu...',
+        published_at: '2024-05-01T00:00:00Z',
+        image: ''
+    }
+];
+
+function formatDate(dateString: string) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+---
+
+<section class="news-section">
+	<div class="container">
+		<h2>{title}</h2>
+		<div class="news-grid">
+            {displayPosts.map(post => (
+                <article class="news-card">
+                    {post.image ? (
+                        <div class="news-img" style={`background-image: url(${post.image}); height: 200px;`}></div>
+                    ) : (
+                        <div class="news-img" style="background-color: #ddd; height: 200px;"></div>
+                    )}
+                    <div class="news-info">
+                        <h3><a href={`/posts/${post.slug}`}>{post.title}</a></h3>
+                        <p class="date">{formatDate(post.published_at)}</p>
+                        <p>{post.excerpt}</p>
+                    </div>
+                </article>
+            ))}
+		</div>
+	</div>
+</section>
+
+<style>
+	h2 {
+		color: var(--vnvda-blue);
+		text-align: center;
+		margin-bottom: 30px;
+		font-size: 2rem;
+		text-transform: uppercase;
+	}
+	.news-section {
+        padding: 40px 0;
+	}
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 15px;
+	}
+	.news-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 30px;
+	}
+	.news-card {
+		background: white;
+		border-radius: 8px;
+		overflow: hidden;
+		box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+		transition: transform 0.3s;
+	}
+	.news-card:hover {
+		transform: translateY(-5px);
+	}
+	.news-img {
+		width: 100%;
+		background-size: cover;
+		background-position: center;
+	}
+	.news-info {
+		padding: 20px;
+	}
+	.news-info h3 {
+		margin: 0 0 10px;
+		font-size: 1.2rem;
+	}
+	.news-info h3 a {
+		color: var(--vnvda-text);
+		text-decoration: none;
+		transition: color 0.3s;
+	}
+	.news-info h3 a:hover {
+		color: var(--vnvda-blue);
+	}
+	.date {
+		color: #777;
+		font-size: 0.9rem;
+		margin-bottom: 10px;
+	}
+	.news-info p {
+		margin: 0;
+		color: #555;
+		line-height: 1.5;
+	}
+    @media (max-width: 768px) {
+		h2 {
+			font-size: 1.5rem;
+		}
+		.news-section {
+			padding: 30px 0;
+		}
+	}
+</style>

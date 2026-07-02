@@ -1,0 +1,116 @@
+---
+import Layout from '../../themes/vnvda/layouts/Layout.astro';
+import Header from '../../themes/vnvda/components/Header.astro';
+import Footer from '../../themes/vnvda/components/Footer.astro';
+
+const { slug } = Astro.params;
+
+let post = null;
+
+// 1. Try fetching from DB
+try {
+    // @ts-ignore
+    const db = Astro.locals.runtime.env.DB;
+    if (db) {
+        post = await db.prepare('SELECT * FROM posts WHERE slug = ? AND status = ?').bind(slug, 'published').first();
+    }
+} catch (e) {
+    console.error('Error fetching post from D1:', e);
+}
+
+// 2. If not found in DB, try fetching from Markdown
+if (!post) {
+    const mdPosts = await Astro.glob('./*.md');
+    const mdPost = mdPosts.find(p => p.frontmatter.slug === slug || p.file.split('/').pop()?.replace('.md', '') === slug);
+    if (mdPost) {
+        post = {
+            title: mdPost.frontmatter.title,
+            content: await mdPost.compiledContent(),
+            published_at: mdPost.frontmatter.published_at,
+            isMarkdown: true
+        };
+    }
+}
+
+if (!post) {
+    return Astro.redirect('/404');
+}
+
+function formatDate(dateString: string) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+---
+
+<Layout title={`${post.title} | Hội Bệnh Mạch Máu Việt Nam`}>
+	<Header />
+
+	<main class="post-detail">
+        <div class="container">
+            <article>
+                <h1>{post.title}</h1>
+                <p class="date">{formatDate(post.published_at)}</p>
+                <div class="content">
+                    {post.isMarkdown ? <Fragment set:html={post.content} /> : <Fragment set:html={post.content} />}
+                </div>
+            </article>
+        </div>
+	</main>
+
+	<Footer />
+</Layout>
+
+<style>
+    main {
+        flex: 1;
+    }
+    .post-detail {
+        padding: 40px 0;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    article {
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    h1 {
+        color: var(--vnvda-blue);
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 2.2rem;
+    }
+    .date {
+        color: #777;
+        margin-bottom: 30px;
+        font-size: 0.95rem;
+    }
+    .content {
+        line-height: 1.8;
+        color: #333;
+    }
+    .content :global(h2) {
+        color: var(--vnvda-blue);
+        margin-top: 30px;
+    }
+    .content :global(img) {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+        margin: 20px 0;
+    }
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.8rem;
+        }
+        article {
+            padding: 20px;
+        }
+    }
+</style>
+export const prerender = false;
