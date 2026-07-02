@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/editor/editor.main.css" />
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        #app { display: flex; height: 100vh; }
+        .sidebar { width: 250px; background: #1e1e1e; color: white; display: flex; flex-direction: column; overflow-y: auto; }
+        .main-content { flex: 1; display: flex; flex-direction: row; background: #f3f4f6; }
+        .editor-pane { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #ccc; background: white; }
+        .preview-pane { flex: 1; display: flex; flex-direction: column; }
+        #monaco-container { flex: 1; width: 100%; }
+        iframe { flex: 1; width: 100%; border: none; }
+        .menu-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #333; }
+        .menu-item:hover, .menu-item.active { background: #333; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #2563eb; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="p-4 text-xl font-bold border-b border-gray-700">Astro Admin</div>
+            <div class="menu-item" :class="{ active: currentTab === 'posts' }" @click="setTab('posts')">Posts</div>
+            <div class="menu-item" :class="{ active: currentTab === 'categories' }" @click="setTab('categories')">Categories</div>
+            <div class="menu-item" :class="{ active: currentTab === 'env' }" @click="setTab('env')">Environment (.env)</div>
+            <div class="menu-item" :class="{ active: currentTab === 'files' }" @click="setTab('files')">File Editor (src)</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Editor Pane -->
+            <div class="editor-pane">
+                <div class="p-4 border-b bg-gray-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold">{{ tabTitle }}</h2>
+                    <div v-if="currentTab === 'posts' && !editingPost">
+                        <button class="btn" @click="createNewPost">New Post</button>
+                    </div>
+                    <div v-if="currentTab === 'categories' && !editingCategory">
+                        <button class="btn" @click="createNewCategory">New Category</button>
+                    </div>
+                    <div v-if="['env', 'files'].includes(currentTab)">
+                        <button class="btn" @click="saveFile">Save File</button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4" v-if="currentTab === 'posts'">
+                    <div v-if="!editingPost">
+                        <div v-for="post in posts" :key="post.id" class="p-3 bg-white shadow mb-2 rounded flex justify-between items-center">
+                            <div>
+                                <div class="font-bold">{{ post.title }}</div>
+                                <div class="text-sm text-gray-500">{{ post.slug }} - {{ post.status }}</div>
+                            </div>
+                            <div>
+                                <button class="btn text-sm mr-2" @click="editPost(post)">Edit</button>
+                                <button class="btn btn-danger text-sm" @click="deletePost(post.id)">Delete</button>
+                            </div>
+                        </div>
+                        <div v-if="posts.length === 0" class="text-gray-500">No posts found.</div>
+                    </div>
+                    <div v-else>
+                        <button class="text-blue-500 mb-4" @click="editingPost = null">&larr; Back to list</button>
+                        <form @submit.prevent="savePost">
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input v-model="currentPost.title" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Slug</label>
+                                <input v-model="currentPost.slug" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select v-model="currentPost.status">
+                                    <option value="draft">Draft</option>
+                                    <option value="published">Published</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Excerpt</label>
+                                <textarea v-model="currentPost.excerpt" rows="2"></textarea>
+                            </div>
+                            <div class="form-group flex-1 flex flex-col h-64">
+                                <label>Content (Markdown)</label>
+                                <textarea v-model="currentPost.content" class="flex-1"></textarea>
+                            </div>
+                            <button type="submit" class="btn">Save Post</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4" v-if="currentTab === 'categories'">
+                    <div v-if="!editingCategory">
+                        <div v-for="cat in categories" :key="cat.id" class="p-3 bg-white shadow mb-2 rounded flex justify-between items-center">
+                            <div>
+                                <div class="font-bold">{{ cat.name }}</div>
+                                <div class="text-sm text-gray-500">{{ cat.slug }}</div>
+                            </div>
+                            <div>
+                                <button class="btn text-sm mr-2" @click="editCategory(cat)">Edit</button>
+                                <button class="btn btn-danger text-sm" @click="deleteCategory(cat.id)">Delete</button>
+                            </div>
+                        </div>
+                        <div v-if="categories.length === 0" class="text-gray-500">No categories found.</div>
+                    </div>
+                    <div v-else>
+                        <button class="text-blue-500 mb-4" @click="editingCategory = null">&larr; Back to list</button>
+                        <form @submit.prevent="saveCategory">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input v-model="currentCategory.name" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Slug</label>
+                                <input v-model="currentCategory.slug" required />
+                            </div>
+                            <button type="submit" class="btn">Save Category</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col" v-show="['env', 'files'].includes(currentTab)">
+                    <div v-if="currentTab === 'files'" class="p-2 border-b bg-gray-50 max-h-48 overflow-y-auto">
+                        <div class="font-bold mb-2">File Explorer (src/)</div>
+                        <div v-for="file in flattenTree(fileTree)" :key="file.path"
+                             class="text-sm cursor-pointer p-1 hover:bg-gray-200"
+                             :class="{'bg-blue-100': currentFilePath === file.path, 'pl-4': file.depth > 0, 'pl-8': file.depth > 1}"
+                             @click="file.type === 'file' ? loadFile(file.path) : null">
+                            <span v-if="file.type === 'directory'">📁</span>
+                            <span v-else>📄</span>
+                            {{ file.name }}
+                        </div>
+                    </div>
+                    <div class="p-2 border-b bg-yellow-50 text-sm" v-if="currentTab === 'files'">
+                        Editing: <span class="font-mono">{{ currentFilePath || 'No file selected' }}</span>
+                    </div>
+                    <div id="monaco-container"></div>
+                </div>
+            </div>
+
+            <!-- Preview Pane -->
+            <div class="preview-pane">
+                <div class="p-4 border-b bg-gray-100 flex justify-between items-center">
+                    <h2 class="text-lg font-bold">Live Preview</h2>
+                    <button class="btn text-sm" @click="reloadPreview">Reload</button>
+                </div>
+                <iframe ref="previewIframe" src="http://localhost:4321"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <script>
+        const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const currentTab = ref('posts');
+                const posts = ref([]);
+                const categories = ref([]);
+                const fileTree = ref([]);
+
+                const editingPost = ref(null);
+                const currentPost = ref({});
+
+                const editingCategory = ref(null);
+                const currentCategory = ref({});
+
+                const currentFilePath = ref('');
+                let editor = null;
+                const previewIframe = ref(null);
+
+                const tabTitle = computed(() => {
+                    switch(currentTab.value) {
+                        case 'posts': return 'Manage Posts';
+                        case 'categories': return 'Manage Categories';
+                        case 'env': return 'Environment Variables';
+                        case 'files': return 'File Editor';
+                        default: return '';
+                    }
+                });
+
+                const reloadPreview = () => {
+                    if (previewIframe.value) {
+                        previewIframe.value.src = previewIframe.value.src;
+                    }
+                };
+
+                const fetchPosts = async () => {
+                    const res = await fetch('/api/posts');
+                    posts.value = await res.json();
+                };
+
+                const fetchCategories = async () => {
+                    const res = await fetch('/api/categories');
+                    categories.value = await res.json();
+                };
+
+                const fetchFileTree = async () => {
+                    const res = await fetch('/api/files/tree');
+                    const data = await res.json();
+                    fileTree.value = data.tree;
+                };
+
+                const flattenTree = (nodes, depth = 0) => {
+                    let flat = [];
+                    for (const node of nodes) {
+                        // Filter out unnecessary root folders if in files tab
+                        if (currentTab.value === 'files' && depth === 0 && !['src', 'forms', 'public', 'scripts', 'astro.config.mjs', 'package.json'].includes(node.name)) {
+                            continue;
+                        }
+                        flat.push({ ...node, depth });
+                        if (node.children) {
+                            flat = flat.concat(flattenTree(node.children, depth + 1));
+                        }
+                    }
+                    return flat;
+                };
+
+                const setTab = async (tab) => {
+                    currentTab.value = tab;
+                    if (tab === 'posts') fetchPosts();
+                    if (tab === 'categories') fetchCategories();
+
+                    if (tab === 'env') {
+                        const res = await fetch('/api/env');
+                        const data = await res.json();
+                        currentFilePath.value = '.env';
+                        setupMonaco(data.content, 'shell');
+                    }
+                    if (tab === 'files') {
+                        fetchFileTree();
+                        currentFilePath.value = '';
+                        setupMonaco('// Select a file from the explorer above\n', 'javascript');
+                    }
+                };
+
+                const createNewPost = () => {
+                    editingPost.value = 'new';
+                    currentPost.value = { title: '', slug: '', excerpt: '', content: '', status: 'draft' };
+                };
+
+                const editPost = (post) => {
+                    editingPost.value = post.id;
+                    currentPost.value = { ...post };
+                };
+
+                const savePost = async () => {
+                    const method = editingPost.value === 'new' ? 'POST' : 'PUT';
+                    const url = editingPost.value === 'new' ? '/api/posts' : `/api/posts/${currentPost.value.id}`;
+                    await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(currentPost.value)
+                    });
+                    editingPost.value = null;
+                    fetchPosts();
+                    reloadPreview();
+                };
+
+                const deletePost = async (id) => {
+                    if (confirm('Delete this post?')) {
+                        await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+                        fetchPosts();
+                        reloadPreview();
+                    }
+                };
+
+                const createNewCategory = () => {
+                    editingCategory.value = 'new';
+                    currentCategory.value = { name: '', slug: '' };
+                };
+
+                const editCategory = (cat) => {
+                    editingCategory.value = cat.id;
+                    currentCategory.value = { ...cat };
+                };
+
+                const saveCategory = async () => {
+                    const method = editingCategory.value === 'new' ? 'POST' : 'PUT';
+                    const url = editingCategory.value === 'new' ? '/api/categories' : `/api/categories/${currentCategory.value.id}`;
+                    await fetch(url, {
+                        method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(currentCategory.value)
+                    });
+                    editingCategory.value = null;
+                    fetchCategories();
+                    reloadPreview();
+                };
+
+                const deleteCategory = async (id) => {
+                    if (confirm('Delete this category?')) {
+                        await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+                        fetchCategories();
+                        reloadPreview();
+                    }
+                };
+
+                const loadFile = async (path) => {
+                    const res = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
+                    const data = await res.json();
+                    currentFilePath.value = path;
+
+                    let language = 'plaintext';
+                    if (path.endsWith('.js') || path.endsWith('.ts') || path.endsWith('.mjs')) language = 'javascript';
+                    if (path.endsWith('.json')) language = 'json';
+                    if (path.endsWith('.css')) language = 'css';
+                    if (path.endsWith('.html') || path.endsWith('.astro')) language = 'html'; // Monaco doesn't have astro, html is close enough
+                    if (path.endsWith('.sql')) language = 'sql';
+
+                    setupMonaco(data.content, language);
+                };
+
+                const saveFile = async () => {
+                    if (!editor || !currentFilePath.value) return;
+                    const content = editor.getValue();
+
+                    if (currentTab.value === 'env') {
+                        await fetch('/api/env', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ content })
+                        });
+                        alert('.env saved! Please restart Astro server manually for env changes to take full effect.');
+                    } else {
+                        await fetch('/api/files', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: currentFilePath.value, content })
+                        });
+                        // Wait a bit for Astro to hot reload, then refresh iframe
+                        setTimeout(reloadPreview, 500);
+                    }
+                };
+
+                const setupMonaco = (code, language) => {
+                    if (!window.monaco) return;
+                    const container = document.getElementById('monaco-container');
+                    if (editor) {
+                        editor.setValue(code);
+                        window.monaco.editor.setModelLanguage(editor.getModel(), language);
+                    } else {
+                        editor = window.monaco.editor.create(container, {
+                            value: code,
+                            language: language,
+                            theme: 'vs-dark',
+                            automaticLayout: true,
+                            minimap: { enabled: false }
+                        });
+                    }
+                };
+
+                onMounted(() => {
+                    fetchPosts();
+
+                    // Initialize Monaco Editor
+                    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+                    require(['vs/editor/editor.main'], function() {
+                        // Editor ready
+                    });
+                });
+
+                return {
+                    currentTab, posts, categories, fileTree,
+                    editingPost, currentPost,
+                    editingCategory, currentCategory,
+                    tabTitle, previewIframe, currentFilePath,
+                    setTab, reloadPreview, flattenTree, loadFile, saveFile,
+                    createNewPost, editPost, savePost, deletePost,
+                    createNewCategory, editCategory, saveCategory, deleteCategory
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

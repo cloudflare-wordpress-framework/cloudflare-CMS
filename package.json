@@ -8,7 +8,9 @@
   "scripts": {
     "sync-env": "node scripts/sync-env.js",
     "sync-schema": "node scripts/sync-db-schema.js",
-    "dev": "npm run sync-env && npm run sync-schema && astro dev",
+    "dev:astro": "npm run sync-env && npm run sync-schema && astro dev",
+    "dev:admin": "node admin-server/index.js",
+    "dev": "concurrently \"npm run dev:astro\" \"npm run dev:admin\"",
     "build": "npm run sync-env && npm run sync-schema && astro build",
     "preview": "npm run sync-env && astro preview",
     "astro": "astro",
@@ -25,5 +27,12 @@
     "firebase": "^12.15.0",
     "wrangler": "^4.105.0",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "better-sqlite3": "^12.11.1",
+    "concurrently": "^10.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
   }
 }
