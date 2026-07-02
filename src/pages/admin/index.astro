@@ -1,9 +1,12 @@
+---
+// Admin interface using Vue, Tailwind and Monaco via CDN
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astro Admin Dashboard</title>
+    <title>Astro System Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/editor/editor.main.css" />
@@ -31,11 +34,21 @@
     <div id="app">
         <!-- Sidebar -->
         <div class="sidebar">
-            <div class="p-4 text-xl font-bold border-b border-gray-700">Astro Admin</div>
+            <div class="p-4 text-xl font-bold border-b border-gray-700">System Admin</div>
+            <div class="text-xs text-gray-400 px-4 py-2 uppercase tracking-wide">CMS (Online)</div>
             <div class="menu-item" :class="{ active: currentTab === 'posts' }" @click="setTab('posts')">Posts</div>
             <div class="menu-item" :class="{ active: currentTab === 'categories' }" @click="setTab('categories')">Categories</div>
-            <div class="menu-item" :class="{ active: currentTab === 'env' }" @click="setTab('env')">Environment (.env)</div>
-            <div class="menu-item" :class="{ active: currentTab === 'files' }" @click="setTab('files')">File Editor (src)</div>
+            <div class="menu-item" :class="{ active: currentTab === 'settings' }" @click="setTab('settings')">Theme Settings</div>
+
+            <div v-if="isLocal">
+                <div class="text-xs text-green-400 px-4 py-2 uppercase tracking-wide mt-4">System Code (Local)</div>
+                <div class="menu-item" :class="{ active: currentTab === 'env' }" @click="setTab('env')">Environment (.env)</div>
+                <div class="menu-item" :class="{ active: currentTab === 'files' }" @click="setTab('files')">File Editor (src)</div>
+            </div>
+
+            <div v-else class="text-xs text-red-400 px-4 py-4 italic mt-4 border-t border-gray-700">
+                Code editing is disabled in production environments.
+            </div>
         </div>
 
         <!-- Main Content -->
@@ -49,6 +62,9 @@
                     </div>
                     <div v-if="currentTab === 'categories' && !editingCategory">
                         <button class="btn" @click="createNewCategory">New Category</button>
+                    </div>
+                    <div v-if="currentTab === 'settings' && !editingSetting">
+                        <button class="btn" @click="createNewSetting">New Setting</button>
                     </div>
                     <div v-if="['env', 'files'].includes(currentTab)">
                         <button class="btn" @click="saveFile">Save File</button>
@@ -130,12 +146,41 @@
                     </div>
                 </div>
 
+                <div class="flex-1 overflow-y-auto p-4" v-if="currentTab === 'settings'">
+                    <div v-if="!editingSetting">
+                        <div v-for="setting in settings" :key="setting.id" class="p-3 bg-white shadow mb-2 rounded flex justify-between items-center">
+                            <div>
+                                <div class="font-bold font-mono">{{ setting.setting_key }}</div>
+                                <div class="text-sm text-gray-500 truncate max-w-sm">{{ setting.setting_value }}</div>
+                            </div>
+                            <div>
+                                <button class="btn text-sm" @click="editSetting(setting)">Edit</button>
+                            </div>
+                        </div>
+                        <div v-if="settings.length === 0" class="text-gray-500">No settings found.</div>
+                    </div>
+                    <div v-else>
+                        <button class="text-blue-500 mb-4" @click="editingSetting = null">&larr; Back to list</button>
+                        <form @submit.prevent="saveSetting">
+                            <div class="form-group">
+                                <label>Key (e.g., custom_css, primary_color)</label>
+                                <input v-model="currentSetting.setting_key" required />
+                            </div>
+                            <div class="form-group flex-1 flex flex-col h-64">
+                                <label>Value</label>
+                                <textarea v-model="currentSetting.setting_value" class="flex-1 font-mono" rows="10"></textarea>
+                            </div>
+                            <button type="submit" class="btn">Save Setting</button>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="flex-1 flex flex-col" v-show="['env', 'files'].includes(currentTab)">
                     <div v-if="currentTab === 'files'" class="p-2 border-b bg-gray-50 max-h-48 overflow-y-auto">
                         <div class="font-bold mb-2">File Explorer (src/)</div>
                         <div v-for="file in flattenTree(fileTree)" :key="file.path"
                              class="text-sm cursor-pointer p-1 hover:bg-gray-200"
-                             :class="{'bg-blue-100': currentFilePath === file.path, 'pl-4': file.depth > 0, 'pl-8': file.depth > 1}"
+                             :class="{'bg-blue-100': currentFilePath === file.path, 'pl-4': file.depth > 0, 'pl-8': file.depth > 1, 'pl-12': file.depth > 2}"
                              @click="file.type === 'file' ? loadFile(file.path) : null">
                             <span v-if="file.type === 'directory'">📁</span>
                             <span v-else>📄</span>
@@ -155,7 +200,7 @@
                     <h2 class="text-lg font-bold">Live Preview</h2>
                     <button class="btn text-sm" @click="reloadPreview">Reload</button>
                 </div>
-                <iframe ref="previewIframe" src="http://localhost:4321"></iframe>
+                <iframe ref="previewIframe" src="/"></iframe>
             </div>
         </div>
     </div>
@@ -167,9 +212,13 @@
 
         createApp({
             setup() {
+                const isLocal = ref(false);
+                const localAdminUrl = 'http://localhost:4000';
+
                 const currentTab = ref('posts');
                 const posts = ref([]);
                 const categories = ref([]);
+                const settings = ref([]);
                 const fileTree = ref([]);
 
                 const editingPost = ref(null);
@@ -177,6 +226,9 @@
 
                 const editingCategory = ref(null);
                 const currentCategory = ref({});
+
+                const editingSetting = ref(null);
+                const currentSetting = ref({});
 
                 const currentFilePath = ref('');
                 let editor = null;
@@ -186,8 +238,9 @@
                     switch(currentTab.value) {
                         case 'posts': return 'Manage Posts';
                         case 'categories': return 'Manage Categories';
+                        case 'settings': return 'Theme Settings';
                         case 'env': return 'Environment Variables';
-                        case 'files': return 'File Editor';
+                        case 'files': return 'System Code Editor';
                         default: return '';
                     }
                 });
@@ -198,26 +251,56 @@
                     }
                 };
 
+                // Helper to check if local admin server is running
+                const checkLocalAdmin = async () => {
+                    try {
+                        const res = await fetch(`${localAdminUrl}/api/health`);
+                        if (res.ok) isLocal.value = true;
+                    } catch (e) {
+                        isLocal.value = false;
+                    }
+                };
+
+                const getAuthHeaders = () => {
+                    const token = localStorage.getItem('firebaseToken') || '';
+                    return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+                };
+
+                const handleApiError = (res) => {
+                    if (res.status === 401) {
+                        alert('Unauthorized. Please log in as an Admin in the main app, and ensure your token is stored as "firebaseToken" in localStorage.');
+                    }
+                };
+
                 const fetchPosts = async () => {
-                    const res = await fetch('/api/posts');
-                    posts.value = await res.json();
+                    const res = await fetch('/api/cms/posts', { headers: getAuthHeaders() });
+                    handleApiError(res);
+                    if (res.ok) posts.value = await res.json();
                 };
 
                 const fetchCategories = async () => {
-                    const res = await fetch('/api/categories');
-                    categories.value = await res.json();
+                    const res = await fetch('/api/cms/categories', { headers: getAuthHeaders() });
+                    handleApiError(res);
+                    if (res.ok) categories.value = await res.json();
                 };
 
+                const fetchSettings = async () => {
+                    const res = await fetch('/api/cms/settings', { headers: getAuthHeaders() });
+                    handleApiError(res);
+                    if (res.ok) settings.value = await res.json();
+                }
+
                 const fetchFileTree = async () => {
-                    const res = await fetch('/api/files/tree');
+                    if (!isLocal.value) return;
+                    const res = await fetch(`${localAdminUrl}/api/files/tree`);
                     const data = await res.json();
                     fileTree.value = data.tree;
                 };
 
                 const flattenTree = (nodes, depth = 0) => {
                     let flat = [];
+                    if (!nodes) return flat;
                     for (const node of nodes) {
-                        // Filter out unnecessary root folders if in files tab
                         if (currentTab.value === 'files' && depth === 0 && !['src', 'forms', 'public', 'scripts', 'astro.config.mjs', 'package.json'].includes(node.name)) {
                             continue;
                         }
@@ -233,14 +316,15 @@
                     currentTab.value = tab;
                     if (tab === 'posts') fetchPosts();
                     if (tab === 'categories') fetchCategories();
+                    if (tab === 'settings') fetchSettings();
 
-                    if (tab === 'env') {
-                        const res = await fetch('/api/env');
+                    if (tab === 'env' && isLocal.value) {
+                        const res = await fetch(`${localAdminUrl}/api/env`);
                         const data = await res.json();
                         currentFilePath.value = '.env';
                         setupMonaco(data.content, 'shell');
                     }
-                    if (tab === 'files') {
+                    if (tab === 'files' && isLocal.value) {
                         fetchFileTree();
                         currentFilePath.value = '';
                         setupMonaco('// Select a file from the explorer above\n', 'javascript');
@@ -258,23 +342,33 @@
                 };
 
                 const savePost = async () => {
+                    const url = editingPost.value === 'new' ? '/api/cms/posts' : `/api/cms/posts-action`;
                     const method = editingPost.value === 'new' ? 'POST' : 'PUT';
-                    const url = editingPost.value === 'new' ? '/api/posts' : `/api/posts/${currentPost.value.id}`;
-                    await fetch(url, {
+                    const res = await fetch(url, {
                         method,
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify(currentPost.value)
                     });
-                    editingPost.value = null;
-                    fetchPosts();
-                    reloadPreview();
+                    handleApiError(res);
+                    if (res.ok) {
+                        editingPost.value = null;
+                        fetchPosts();
+                        reloadPreview();
+                    }
                 };
 
                 const deletePost = async (id) => {
                     if (confirm('Delete this post?')) {
-                        await fetch(`/api/posts/${id}`, { method: 'DELETE' });
-                        fetchPosts();
-                        reloadPreview();
+                        const res = await fetch(`/api/cms/posts-action`, {
+                            method: 'DELETE',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({ id })
+                        });
+                        handleApiError(res);
+                        if (res.ok) {
+                            fetchPosts();
+                            reloadPreview();
+                        }
                     }
                 };
 
@@ -290,27 +384,61 @@
 
                 const saveCategory = async () => {
                     const method = editingCategory.value === 'new' ? 'POST' : 'PUT';
-                    const url = editingCategory.value === 'new' ? '/api/categories' : `/api/categories/${currentCategory.value.id}`;
-                    await fetch(url, {
+                    const res = await fetch('/api/cms/categories', {
                         method,
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders(),
                         body: JSON.stringify(currentCategory.value)
                     });
-                    editingCategory.value = null;
-                    fetchCategories();
-                    reloadPreview();
-                };
-
-                const deleteCategory = async (id) => {
-                    if (confirm('Delete this category?')) {
-                        await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+                    handleApiError(res);
+                    if (res.ok) {
+                        editingCategory.value = null;
                         fetchCategories();
                         reloadPreview();
                     }
                 };
 
+                const deleteCategory = async (id) => {
+                    if (confirm('Delete this category?')) {
+                        const res = await fetch(`/api/cms/categories`, {
+                            method: 'DELETE',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({ id })
+                        });
+                        handleApiError(res);
+                        if (res.ok) {
+                            fetchCategories();
+                            reloadPreview();
+                        }
+                    }
+                };
+
+                const createNewSetting = () => {
+                    editingSetting.value = 'new';
+                    currentSetting.value = { setting_key: '', setting_value: '' };
+                };
+
+                const editSetting = (setting) => {
+                    editingSetting.value = setting.id;
+                    currentSetting.value = { ...setting };
+                };
+
+                const saveSetting = async () => {
+                    const res = await fetch('/api/cms/settings', {
+                        method: 'POST', // using POST for upsert
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(currentSetting.value)
+                    });
+                    handleApiError(res);
+                    if (res.ok) {
+                        editingSetting.value = null;
+                        fetchSettings();
+                        reloadPreview();
+                    }
+                };
+
                 const loadFile = async (path) => {
-                    const res = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
+                    if (!isLocal.value) return;
+                    const res = await fetch(`${localAdminUrl}/api/files?path=${encodeURIComponent(path)}`);
                     const data = await res.json();
                     currentFilePath.value = path;
 
@@ -318,30 +446,29 @@
                     if (path.endsWith('.js') || path.endsWith('.ts') || path.endsWith('.mjs')) language = 'javascript';
                     if (path.endsWith('.json')) language = 'json';
                     if (path.endsWith('.css')) language = 'css';
-                    if (path.endsWith('.html') || path.endsWith('.astro')) language = 'html'; // Monaco doesn't have astro, html is close enough
+                    if (path.endsWith('.html') || path.endsWith('.astro')) language = 'html';
                     if (path.endsWith('.sql')) language = 'sql';
 
                     setupMonaco(data.content, language);
                 };
 
                 const saveFile = async () => {
-                    if (!editor || !currentFilePath.value) return;
+                    if (!editor || !currentFilePath.value || !isLocal.value) return;
                     const content = editor.getValue();
 
                     if (currentTab.value === 'env') {
-                        await fetch('/api/env', {
+                        await fetch(`${localAdminUrl}/api/env`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ content })
                         });
                         alert('.env saved! Please restart Astro server manually for env changes to take full effect.');
                     } else {
-                        await fetch('/api/files', {
+                        await fetch(`${localAdminUrl}/api/files`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ path: currentFilePath.value, content })
                         });
-                        // Wait a bit for Astro to hot reload, then refresh iframe
                         setTimeout(reloadPreview, 500);
                     }
                 };
@@ -364,23 +491,27 @@
                 };
 
                 onMounted(() => {
-                    fetchPosts();
+                    checkLocalAdmin().then(() => {
+                        fetchPosts();
+                    });
 
                     // Initialize Monaco Editor
                     require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
                     require(['vs/editor/editor.main'], function() {
-                        // Editor ready
+                        // Ready
                     });
                 });
 
                 return {
-                    currentTab, posts, categories, fileTree,
+                    isLocal, currentTab, posts, categories, settings, fileTree,
                     editingPost, currentPost,
                     editingCategory, currentCategory,
+                    editingSetting, currentSetting,
                     tabTitle, previewIframe, currentFilePath,
                     setTab, reloadPreview, flattenTree, loadFile, saveFile,
                     createNewPost, editPost, savePost, deletePost,
-                    createNewCategory, editCategory, saveCategory, deleteCategory
+                    createNewCategory, editCategory, saveCategory, deleteCategory,
+                    createNewSetting, editSetting, saveSetting
                 };
             }
         }).mount('#app');
