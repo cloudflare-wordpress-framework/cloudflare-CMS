@@ -29,3 +29,10 @@ CREATE TABLE IF NOT EXISTS post_tags (
   FOREIGN KEY (post_id) REFERENCES posts(id),
   FOREIGN KEY (tag_id) REFERENCES tags(id)
 );
+
+CREATE TABLE IF NOT EXISTS theme_settings (
+  id TEXT PRIMARY KEY,
+  setting_key TEXT NOT NULL UNIQUE,
+  setting_value TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
