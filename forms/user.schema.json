@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "User",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Primary Key" },
+    "firebase_uid": { "type": "string", "description": "Firebase UID (Unique)" },
+    "email": { "type": "string", "format": "email", "description": "User Email (Unique)" },
+    "role": { "type": "string", "enum": ["admin", "editor", "user"], "default": "user" },
+    "full_name": { "type": "string", "description": "Full Name" },
+    "birthdate": { "type": "string", "format": "date", "description": "Birthdate (YYYY-MM-DD)" },
+    "workplace": { "type": "string", "description": "Place of Work" },
+    "avatar": { "type": "string", "description": "Avatar URL", "format": "uri" },
+    "created_at": { "type": "string", "format": "date-time", "description": "Creation Timestamp" }
+  },
+  "required": ["id", "firebase_uid", "email", "role"]
+}

@@ -7,20 +7,23 @@
   },
   "scripts": {
     "sync-env": "node scripts/sync-env.js",
-    "dev": "npm run sync-env && astro dev",
-    "build": "npm run sync-env && astro build",
+    "sync-schema": "node scripts/sync-db-schema.js",
+    "dev": "npm run sync-env && npm run sync-schema && astro dev",
+    "build": "npm run sync-env && npm run sync-schema && astro build",
     "preview": "npm run sync-env && astro preview",
     "astro": "astro",
     "generate-types": "npm run sync-env && wrangler types",
     "db:create": "wrangler d1 create cms-db",
-    "db:init:local": "wrangler d1 execute cms-db --local --file=./schema.sql",
-    "db:init:remote": "wrangler d1 execute cms-db --remote --file=./schema.sql",
-    "deploy": "npm run sync-env && npm run build && wrangler pages deploy ./dist",
+    "db:init:local": "npm run sync-schema && wrangler d1 execute cms-db --local --file=./schema.sql && wrangler d1 execute cms-db --local --file=./user_schema.sql",
+    "db:init:remote": "npm run sync-schema && wrangler d1 execute cms-db --remote --file=./schema.sql && wrangler d1 execute cms-db --remote --file=./user_schema.sql",
+    "deploy": "npm run build && wrangler pages deploy ./dist",
     "setup:local": "npm install && npm run db:init:local"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.0.1",
     "astro": "^7.0.3",
-    "wrangler": "^4.105.0"
+    "firebase": "^12.15.0",
+    "wrangler": "^4.105.0",
+    "zod": "^4.4.3"
   }
 }

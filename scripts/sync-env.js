@@ -47,6 +47,11 @@ if (!wranglerConfig.d1_databases) {
   wranglerConfig.d1_databases = [{}];
 }
 
+// Ensure only one DB is in the array to revert previous dual-db change
+if (wranglerConfig.d1_databases.length > 1) {
+    wranglerConfig.d1_databases = [wranglerConfig.d1_databases[0]];
+}
+
 if (env.D1_BINDING) {
   wranglerConfig.d1_databases[0].binding = env.D1_BINDING;
 }
