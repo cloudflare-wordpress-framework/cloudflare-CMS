@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '../../../lib/auth/utils';
 
@@ -5,7 +6,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
   if (!await checkAdminAuth(request)) return new Response('Unauthorized', { status: 401 });
   try {
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
     const { results } = await db.prepare('SELECT * FROM theme_settings').all();
     return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error: any) {
@@ -18,7 +19,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const data = await request.json();
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
     const { setting_key, setting_value } = data;
     const id = crypto.randomUUID();
 

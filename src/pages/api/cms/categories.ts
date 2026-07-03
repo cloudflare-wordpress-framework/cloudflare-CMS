@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '../../../lib/auth/utils';
 
@@ -5,7 +6,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
   if (!await checkAdminAuth(request)) return new Response('Unauthorized', { status: 401 });
   try {
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
     const { results } = await db.prepare('SELECT * FROM categories').all();
     return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error: any) {
@@ -18,7 +19,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const data = await request.json();
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
     const { id, name, slug } = data;
     const newId = id || crypto.randomUUID();
 
@@ -35,7 +36,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
   try {
     const data = await request.json();
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
     const { id, name, slug } = data;
 
     await db.prepare('UPDATE categories SET name = ?, slug = ? WHERE id = ?').bind(name, slug, id).run();
@@ -51,7 +52,7 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   try {
     const { id } = await request.json();
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
 
     await db.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();
 
