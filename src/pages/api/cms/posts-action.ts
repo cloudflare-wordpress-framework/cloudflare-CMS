@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '../../../lib/auth/utils';
 
@@ -6,7 +7,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
   try {
     const data = await request.json();
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
     const { id, slug, title, excerpt, content, status, author_id } = data;
     const published_at = status === 'published' ? new Date().toISOString() : null;
 
@@ -27,7 +28,7 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   try {
     const { id } = await request.json();
     // @ts-ignore
-    const db = locals.runtime.env.DB;
+    const db = env.DB;
     await db.prepare('DELETE FROM posts WHERE id = ?').bind(id).run();
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (error: any) {

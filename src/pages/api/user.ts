@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import schemaRaw from '../../../forms/user.schema.json';
+import { env } from "cloudflare:workers";
 
 function validateData(data: any, schema: any) {
     const required = schema.required || [];
@@ -18,7 +19,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   const token = authHeader.split('Bearer ')[1];
-  const env = (locals as any).runtime?.env;
 
   if (!env || !env.DB) {
       console.error("DB binding not found. Check wrangler.jsonc and env.");
