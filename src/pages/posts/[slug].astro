@@ -3,6 +3,8 @@ import Layout from '../../themes/vnvda/layouts/Layout.astro';
 import Header from '../../themes/vnvda/components/Header.astro';
 import Footer from '../../themes/vnvda/components/Footer.astro';
 
+import { env } from "cloudflare:workers";
+
 const { slug } = Astro.params;
 
 let post = null;
@@ -10,7 +12,7 @@ let post = null;
 // 1. Try fetching from DB
 try {
     // @ts-ignore
-    const db = Astro.locals.runtime.env.DB;
+    const db = env.DB;
     if (db) {
         post = await db.prepare('SELECT * FROM posts WHERE slug = ? AND status = ?').bind(slug, 'published').first();
     }
@@ -20,12 +22,13 @@ try {
 
 // 2. If not found in DB, try fetching from Markdown
 if (!post) {
-    const mdPosts = await Astro.glob('./*.md');
-    const mdPost = mdPosts.find(p => p.frontmatter.slug === slug || p.file.split('/').pop()?.replace('.md', '') === slug);
+    const mdPostsGlob = import.meta.glob('./*.md', { eager: true });
+    const mdPosts = Object.values(mdPostsGlob);
+    const mdPost = mdPosts.find((p: any) => p.frontmatter.slug === slug || p.file.split('/').pop()?.replace('.md', '') === slug);
     if (mdPost) {
         post = {
             title: mdPost.frontmatter.title,
-            content: await mdPost.compiledContent(),
+            content: typeof mdPost.compiledContent === 'function' ? mdPost.compiledContent() : '',
             published_at: mdPost.frontmatter.published_at,
             isMarkdown: true
         };

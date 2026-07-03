@@ -3,6 +3,8 @@ import Layout from '../../themes/vnvda/layouts/Layout.astro';
 import Header from '../../themes/vnvda/components/Header.astro';
 import Footer from '../../themes/vnvda/components/Footer.astro';
 
+import { env } from "cloudflare:workers";
+
 const { slug } = Astro.params;
 
 let category = null;
@@ -10,7 +12,7 @@ let dbPosts = [];
 
 try {
     // @ts-ignore
-    const db = Astro.locals.runtime.env.DB;
+    const db = env.DB;
     if (db) {
         category = await db.prepare('SELECT * FROM categories WHERE slug = ?').bind(slug).first();
 
@@ -28,10 +30,11 @@ try {
 }
 
 // Fetch posts from markdown (simplistic category matching based on folder or frontmatter)
-const mdPosts = await Astro.glob('../posts/*.md');
+const mdPostsGlob = import.meta.glob('../posts/*.md', { eager: true });
+const mdPosts = Object.values(mdPostsGlob);
 const parsedMdPosts = mdPosts
-    .filter(p => p.frontmatter.category === slug || !p.frontmatter.category) // simplistic filter
-    .map(p => ({
+    .filter((p: any) => p.frontmatter.category === slug || !p.frontmatter.category) // simplistic filter
+    .map((p: any) => ({
         title: p.frontmatter.title,
         slug: p.frontmatter.slug || p.file.split('/').pop()?.replace('.md', ''),
         excerpt: p.frontmatter.excerpt,
