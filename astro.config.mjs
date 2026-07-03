@@ -7,7 +7,11 @@ const env = loadEnv('', process.cwd(), '');
 
 // https://astro.build/config
 export default defineConfig({
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    platformProxy: {
+      enabled: true
+    }
+  }),
   vite: {
     define: {
       'import.meta.env.FIREBASE_API_KEY': JSON.stringify(env.FIREBASE_API_KEY),
