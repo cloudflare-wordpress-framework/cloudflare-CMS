@@ -6,12 +6,14 @@ import Slider from '../themes/vnvda/components/modules/Slider.astro';
 import AboutSection from '../themes/vnvda/components/modules/AboutSection.astro';
 import NewsSection from '../themes/vnvda/components/modules/NewsSection.astro';
 
+import { env } from "cloudflare:workers";
+
 // Fetch dynamic theme settings from D1
 let themeSettings: Record<string, string> = {};
 let dbPosts = [];
 try {
     // @ts-ignore
-    const db = Astro.locals.runtime.env.DB;
+    const db = env.DB;
     if (db) {
         const { results: settingsResults } = await db.prepare('SELECT * FROM theme_settings').all();
         settingsResults.forEach((row: any) => {
