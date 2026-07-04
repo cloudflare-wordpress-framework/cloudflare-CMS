@@ -1,11 +1,11 @@
 ---
 export const prerender = true;
-import Layout from '../themes/vnvda/layouts/Layout.astro';
-import Header from '../themes/vnvda/components/Header.astro';
-import Footer from '../themes/vnvda/components/Footer.astro';
-import Slider from '../themes/vnvda/components/modules/Slider.astro';
-import AboutSection from '../themes/vnvda/components/modules/AboutSection.astro';
-import NewsSection from '../themes/vnvda/components/modules/NewsSection.astro';
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import Slider from '../../components/ui/Slider.astro';
+import AboutSection from '../../components/ui/AboutSection.astro';
+import NewsSection from '../../components/ui/NewsSection.astro';
 
 // Fetch posts from markdown
 const mdPostsGlob = import.meta.glob('./posts/*.md', { eager: true });
@@ -47,7 +47,7 @@ const aboutLinkUrl = '/gioi-thieu/lich-su-hinh-thanh/';
 const newsTitle = 'Tin tức & Sự kiện nổi bật';
 ---
 
-<Layout title="Trang chủ | Hội Bệnh Mạch Máu Việt Nam">
+<PublicLayout title="Trang chủ | Hội Bệnh Mạch Máu Việt Nam">
 	<Header />
 
 	<main>
@@ -69,7 +69,7 @@ const newsTitle = 'Tin tức & Sự kiện nổi bật';
 	</main>
 
 	<Footer />
-</Layout>
+</PublicLayout>
 
 <style>
 	main {

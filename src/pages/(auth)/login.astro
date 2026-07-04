@@ -1,15 +1,10 @@
 ---
+import AuthLayout from "../../layouts/AuthLayout.astro";
 export const prerender = true;
-// src/pages/login.astro
 ---
 
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login</title>
-</head>
-<body>
+<AuthLayout title="Login">
+
   <main>
     <h1>Login</h1>
 
@@ -29,7 +24,7 @@ export const prerender = true;
   </main>
 
   <script>
-    import { auth } from '../lib/firebase/client';
+    import { auth } from '../../lib/services/firebaseClient';
     import {
       signInWithEmailAndPassword,
       GoogleAuthProvider,
@@ -70,5 +65,5 @@ export const prerender = true;
     input, button { padding: 0.5rem; margin-bottom: 0.5rem; width: 100%; box-sizing: border-box; }
     .divider { margin: 1rem 0; font-weight: bold; }
   </style>
-</body>
-</html>
+
+</AuthLayout>

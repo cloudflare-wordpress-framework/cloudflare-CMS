@@ -1,8 +1,8 @@
 ---
 export const prerender = true;
-import Layout from '../../themes/vnvda/layouts/Layout.astro';
-import Header from '../../themes/vnvda/components/Header.astro';
-import Footer from '../../themes/vnvda/components/Footer.astro';
+import PublicLayout from '../../../layouts/PublicLayout.astro';
+import Header from '../../../components/layout/Header.astro';
+import Footer from '../../../components/layout/Footer.astro';
 
 export async function getStaticPaths() {
     const mdPostsGlob = import.meta.glob('../posts/*.md', { eager: true });
@@ -51,7 +51,7 @@ function formatDate(dateString: string) {
 }
 ---
 
-<Layout title={`Chuyên mục: ${category.name} | Hội Bệnh Mạch Máu Việt Nam`}>
+<PublicLayout title={`Chuyên mục: ${category.name} | Hội Bệnh Mạch Máu Việt Nam`}>
 	<Header />
 
 	<main class="category-page">
@@ -82,7 +82,7 @@ function formatDate(dateString: string) {
 	</main>
 
 	<Footer />
-</Layout>
+</PublicLayout>
 
 <style>
     main {

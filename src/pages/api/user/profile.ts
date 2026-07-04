@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import schemaRaw from '../../../forms/user.schema.json';
+import schemaRaw from '../../../../forms/user.schema.json';
 import { env } from "cloudflare:workers";
 
 function validateData(data: any, schema: any) {

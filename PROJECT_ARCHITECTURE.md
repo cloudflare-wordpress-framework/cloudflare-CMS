@@ -420,31 +420,112 @@ post\_id
 tag\_id  
 ---
 
-# **Cấu trúc mã nguồn**
 
-src  
-├── pages  
-│   ├── index.astro  
-│   ├── posts  
-│   ├── category  
-│   └── admin  
-│  
-├── components  
-│  
-├── layouts  
-│  
-├── lib  
-│   ├── auth  
-│   ├── database  
-│   ├── cache  
-│   └── search  
-│  
-├── integrations  
-│   ├── firebase  
-│   └── giscus  
-│  
-└── middleware  
----
+# **Cấu trúc mã nguồn (Enterprise Template)**
+
+Được thiết kế theo tiêu chuẩn Enterprise, tách biệt hoàn toàn UI - logic - data - middleware - API, dễ dàng mở rộng không giới hạn:
+
+```
+project/
+│
+├── src/
+│   ├── pages/                     # Routing layer
+│   │   ├── (public)/              # Các trang hiển thị public (Trang chủ, bài viết, danh mục)
+│   │   ├── (auth)/                # Các trang xác thực (login, signup)
+│   │   ├── (dashboard)/           # Các trang yêu cầu đăng nhập, quản trị (admin, account)
+│   │   ├── api/                   # API routes (SSR) được phân chia theo module
+│   │   │   ├── auth/
+│   │   │   ├── user/
+│   │   │   ├── cms/
+│   │   │   └── post/
+│   │   └── errors/                # Trang lỗi (404, 500)
+│   │
+│   ├── components/                # UI components (Hoàn toàn tách biệt logic)
+│   │   ├── ui/                    # Các module hiển thị giao diện chính (Slider, News, About)
+│   │   ├── layout/                # Header, Footer, Navigation
+│   │   ├── data-display/          # Tables, Charts
+│   │   └── shared/                # Các thành phần dùng chung (DynamicForm, Vue components)
+│   │
+│   ├── layouts/                   # Layout phân chia theo nhóm trang
+│   │   ├── PublicLayout.astro     # Layout cho người dùng phổ thông
+│   │   ├── DashboardLayout.astro  # Layout cho CMS, trang admin
+│   │   └── AuthLayout.astro       # Layout tối giản cho xác thực
+│   │
+│   ├── middleware/                # Request pipeline xử lý tuần tự (sequence)
+│   │   ├── index.ts               # Entry kết nối pipeline
+│   │   ├── auth.ts                # Auth guard, kiểm tra quyền
+│   │   ├── logging.ts             # Ghi log request
+│   │   ├── security.ts            # Rate limit, cấu hình bảo mật
+│   │   └── i18n.ts                # Localization
+│   │
+│   ├── lib/                       # Business logic layer
+│   │   ├── server/                # Các tiện ích chỉ chạy trên server (không leak ra client)
+│   │   │   ├── auth.ts            # Backend Auth Utils
+│   │   │   ├── db.ts              # Database client/bindings
+│   │   │   ├── session.ts
+│   │   │   └── cache.ts
+│   │   ├── services/              # Domain services xử lý nghiệp vụ cụ thể
+│   │   │   ├── firebaseClient.ts
+│   │   │   ├── userService.ts
+│   │   │   ├── postService.ts
+│   │   │   └── paymentService.ts
+│   │   ├── utils/                 # Pure functions, utils hỗ trợ
+│   │   │   ├── format.ts
+│   │   │   └── validate.ts
+│   │   └── constants/             # Khai báo hằng số hệ thống
+│   │       ├── roles.ts
+│   │       └── errors.ts
+│   │
+│   ├── data/                      # Dữ liệu tĩnh hoặc cấu hình data
+│   │   ├── posts.json
+│   │   └── config.ts
+│   │
+│   ├── stores/                    # Client-side state quản lý bằng Vue/Pinia (nếu có)
+│   │
+│   ├── styles/                    # Global CSS
+│   │
+│   └── env.d.ts
+│
+├── config/                        # Tách biệt hoàn toàn config khỏi root
+│   ├── astro.config.mjs           # Config chính
+│   ├── tailwind.config.js
+│   ├── i18n.config.ts
+│   └── security.config.ts
+│
+├── scripts/                       # Scripts tự động hoá DevOps
+│   ├── build.ts
+│   ├── deploy.ts
+│   ├── sync-env.js
+│   ├── sync-db-schema.js
+│   └── seed.ts
+│
+├── tests/                         # Thư mục kiểm thử (chia theo layer)
+│
+└── root configuration files (package.json, astro.config.mjs proxy, etc.)
+```
+
+## **Nguyên tắc hoạt động của kiến trúc mới**
+
+1. **Module hóa theo Domain (Module-Driven)**
+   Toàn bộ cấu trúc không còn chia theo "frontend/backend" chung chung. Thay vào đó, API và logic được chia theo domain (ví dụ: `auth`, `user`, `post`). Giúp các team khác nhau có thể làm việc trên từng module độc lập mà không gây xung đột.
+
+2. **Tách biệt UI – Logic – Data**
+   - **UI:** Chỉ tập trung ở `src/components/`. Components không tự gọi trực tiếp database.
+   - **Logic:** Đặt tại `src/lib/services/` và `src/lib/server/`. Astro components hoặc API routes sẽ import service để gọi hàm thực thi nghiệp vụ (ví dụ: `userService.getProfile()`).
+   - **Data:** Truy xuất thông qua Service layer, không viết query SQL hoặc Firebase SDK trực tiếp rải rác khắp UI components.
+
+3. **Routing theo Group**
+   Astro Pages sử dụng "Route Groups" (những thư mục bọc trong dấu ngoặc đơn như `(public)`, `(auth)`). Cấu trúc này không ảnh hưởng đến URL xuất ra (ví dụ trang public/index.astro vẫn là `/`) nhưng cho phép nhóm các trang có chung Layout và Middleware một cách logic.
+
+4. **Middleware Pipeline Chuyên Nghiệp**
+   Sử dụng tính năng `sequence()` của Astro trong `src/middleware/index.ts`. Các request đi vào hệ thống sẽ phải đi qua một luồng pipeline (giống Express.js):
+   `Request -> Security -> Logging -> i18n -> Auth Guard -> Trả về Route Handler`. Giúp hệ thống an toàn và dễ dàng mở rộng bộ lọc.
+
+5. **Server-only Utilities**
+   Bất kỳ đoạn code nào tương tác nhạy cảm với D1, mã hóa, hoặc xác thực cấp quyền được khoanh vùng nghiêm ngặt trong `src/lib/server/`. Cơ chế của Astro đảm bảo code ở đây không bao giờ rò rỉ (leak) xuống client bundle.
+
+6. **Quản lý Cấu hình Tập trung (Config Layer)**
+   Các file cấu hình quan trọng được gom về thư mục `/config/`. File `astro.config.mjs` ở root chỉ đóng vai trò proxy export từ `/config/astro.config.mjs`. Giúp root thư mục gọn gàng, phù hợp môi trường đa dự án (multi-environment).
 
 # **Khả năng mở rộng tương lai**
 
