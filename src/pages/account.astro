@@ -1,114 +1,20 @@
 ---
-// src/pages/account.astro
-import DynamicForm from '../components/DynamicForm.astro';
+export const prerender = false;
+import Layout from '../themes/vnvda/layouts/Layout.astro';
+import Header from '../themes/vnvda/components/Header.astro';
+import Footer from '../themes/vnvda/components/Footer.astro';
+import UserAccount from '../components/UserAccount.vue';
 ---
 
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>User Account</title>
-</head>
-<body>
-  <main>
-    <h1>Your Account</h1>
-    <p id="user-info">Loading user info...</p>
+<Layout title="Your Account | Hội Bệnh Mạch Máu Việt Nam">
+	<Header />
+    <main>
+        <h1>Your Account</h1>
+        <UserAccount client:only="vue" />
+    </main>
+	<Footer />
+</Layout>
 
-    <div id="profile-form-container" style="display: none;">
-        <h2>Update Profile Info</h2>
-        <!-- The form action will be intercepted by client-side JS to include Firebase Token -->
-        <DynamicForm
-          schemaPath="forms/user.schema.json"
-          action="/api/user"
-          method="POST"
-          submitLabel="Save Account"
-        />
-
-        <hr style="margin: 2rem 0;" />
-
-        <h2>Change Password</h2>
-        <form id="password-form" class="dynamic-form" style="margin-bottom: 2rem;">
-          <div class="form-group">
-            <label for="new-password">New Password</label>
-            <input type="password" id="new-password" name="new-password" required minlength="6" />
-          </div>
-          <button type="submit">Update Password</button>
-        </form>
-    </div>
-
-    <button id="btn-logout" style="margin-top: 2rem;">Logout</button>
-  </main>
-
-  <script>
-    import { auth } from '../lib/firebase/client';
-    import { onAuthStateChanged, signOut, updatePassword } from 'firebase/auth';
-
-    const userInfoEl = document.getElementById('user-info')!;
-    const formContainer = document.getElementById('profile-form-container')!;
-    const logoutBtn = document.getElementById('btn-logout');
-    const form = document.querySelector('form.dynamic-form') as HTMLFormElement;
-    const passwordForm = document.getElementById('password-form') as HTMLFormElement;
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        userInfoEl.textContent = `Logged in as: ${user.email}`;
-        formContainer.style.display = 'block';
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-
-            // Extract the token using user.getIdToken()
-            const idToken = await user.getIdToken();
-
-            try {
-                // Pass it to the backend via the Authorization header as a Bearer token
-                const response = await fetch('/api/user', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}`
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
-                    alert('Account updated successfully!');
-                } else {
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.message}`);
-                }
-            } catch (err) {
-                alert('Failed to update account.');
-            }
-        });
-
-        passwordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newPassword = (document.getElementById('new-password') as HTMLInputElement).value;
-
-            try {
-                await updatePassword(user, newPassword);
-                alert('Password updated successfully!');
-                passwordForm.reset();
-            } catch (err: any) {
-                alert(`Failed to update password: ${err.message}`);
-            }
-        });
-
-      } else {
-        window.location.href = '/login';
-      }
-    });
-
-    logoutBtn?.addEventListener('click', () => {
-      signOut(auth);
-    });
-  </script>
-
-  <style>
-    main { max-width: 600px; margin: 2rem auto; padding: 1rem; }
-  </style>
-</body>
-</html>
+<style>
+    main { max-width: 800px; margin: 2rem auto; padding: 1rem; flex: 1; width: 100%; }
+</style>
