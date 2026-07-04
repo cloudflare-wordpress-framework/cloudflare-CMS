@@ -1,39 +1,24 @@
 ---
+export const prerender = true;
 import Layout from '../../themes/vnvda/layouts/Layout.astro';
 import Header from '../../themes/vnvda/components/Header.astro';
 import Footer from '../../themes/vnvda/components/Footer.astro';
 
-import { env } from "cloudflare:workers";
-
-const { slug } = Astro.params;
-
-let post = null;
-
-// 1. Try fetching from DB
-try {
-    // @ts-ignore
-    const db = env.DB;
-    if (db) {
-        post = await db.prepare('SELECT * FROM posts WHERE slug = ? AND status = ?').bind(slug, 'published').first();
-    }
-} catch (e) {
-    console.error('Error fetching post from D1:', e);
-}
-
-// 2. If not found in DB, try fetching from Markdown
-if (!post) {
+export async function getStaticPaths() {
     const mdPostsGlob = import.meta.glob('./*.md', { eager: true });
     const mdPosts = Object.values(mdPostsGlob);
-    const mdPost = mdPosts.find((p: any) => p.frontmatter.slug === slug || p.file.split('/').pop()?.replace('.md', '') === slug);
-    if (mdPost) {
-        post = {
-            title: mdPost.frontmatter.title,
-            content: typeof mdPost.compiledContent === 'function' ? mdPost.compiledContent() : '',
-            published_at: mdPost.frontmatter.published_at,
+    return mdPosts.map((p: any) => ({
+        params: { slug: p.frontmatter.slug || p.file.split('/').pop()?.replace('.md', '') },
+        props: { post: {
+            title: p.frontmatter.title,
+            content: typeof p.compiledContent === 'function' ? p.compiledContent() : '',
+            published_at: p.frontmatter.published_at,
             isMarkdown: true
-        };
-    }
+        }}
+    }));
 }
+
+const { post } = Astro.props;
 
 if (!post) {
     return Astro.redirect('/404');
@@ -116,4 +101,3 @@ function formatDate(dateString: string) {
         }
     }
 </style>
-export const prerender = false;
