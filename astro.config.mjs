@@ -7,7 +7,7 @@ const env = loadEnv('', process.cwd(), '');
 
 // https://astro.build/config
 export default defineConfig({
-  output: 'server',
+  output: 'static',
   adapter: cloudflare({
     platformProxy: {
       enabled: true,
