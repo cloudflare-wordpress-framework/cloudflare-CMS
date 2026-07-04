@@ -1,0 +1,20 @@
+---
+export const prerender = true;
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+import UserAccount from '../../components/shared/UserAccount.vue';
+---
+
+<DashboardLayout title="Your Account | Hội Bệnh Mạch Máu Việt Nam">
+	<Header />
+    <main>
+        <h1>Your Account</h1>
+        <UserAccount client:only="vue" />
+    </main>
+	<Footer />
+</DashboardLayout>
+
+<style>
+    main { max-width: 800px; margin: 2rem auto; padding: 1rem; flex: 1; width: 100%; }
+</style>

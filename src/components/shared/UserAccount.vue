@@ -39,10 +39,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { auth } from '../lib/firebase/client';
+import { auth } from '../../lib/services/firebaseClient';
 import { onAuthStateChanged, signOut, updatePassword } from 'firebase/auth';
 import DynamicForm from './DynamicForm.vue';
-import schemaRaw from '../../forms/user.schema.json';
+import schemaRaw from '../../../forms/user.schema.json';
 
 const schema = ref(schemaRaw);
 const user = ref(null);

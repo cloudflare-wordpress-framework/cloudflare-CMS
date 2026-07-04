@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '../../../lib/auth/utils';
+import { checkAdminAuth } from '../../../lib/server/auth';
 
 export const PUT: APIRoute = async ({ request, locals }) => {
   if (!await checkAdminAuth(request)) return new Response('Unauthorized', { status: 401 });
