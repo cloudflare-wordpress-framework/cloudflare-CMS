@@ -1,39 +1,36 @@
 ---
+export const prerender = true;
 import Layout from '../../themes/vnvda/layouts/Layout.astro';
 import Header from '../../themes/vnvda/components/Header.astro';
 import Footer from '../../themes/vnvda/components/Footer.astro';
 
-import { env } from "cloudflare:workers";
+export async function getStaticPaths() {
+    const mdPostsGlob = import.meta.glob('../posts/*.md', { eager: true });
+    const mdPosts = Object.values(mdPostsGlob);
 
-const { slug } = Astro.params;
-
-let category = null;
-let dbPosts = [];
-
-try {
-    // @ts-ignore
-    const db = env.DB;
-    if (db) {
-        category = await db.prepare('SELECT * FROM categories WHERE slug = ?').bind(slug).first();
-
-        if (category) {
-            // Note: Current schema doesn't have post_categories, assuming posts can be fetched by some relation
-            // As a fallback for this demo, we'll fetch all posts if category matches or just use a generic query
-            // Since the schema has post_tags but not post_categories, we'll pretend it's matching a tag or just fetch all
-            // For a robust implementation, a category_id should be added to the posts table.
-            const { results } = await db.prepare('SELECT * FROM posts WHERE status = ? ORDER BY published_at DESC LIMIT 20').bind('published').all();
-            dbPosts = results;
+    // Extract unique categories from posts
+    const categories = new Set();
+    mdPosts.forEach((p: any) => {
+        if (p.frontmatter.category) {
+            categories.add(p.frontmatter.category);
         }
-    }
-} catch (e) {
-    console.error('Error fetching data from D1:', e);
+    });
+
+    return Array.from(categories).map(slug => ({
+        params: { slug },
+        props: { slug }
+    }));
 }
 
-// Fetch posts from markdown (simplistic category matching based on folder or frontmatter)
+const { slug } = Astro.props;
+
+let category = { name: slug?.replace(/-/g, ' ').toUpperCase(), slug };
+
+// Fetch posts from markdown (simplistic category matching based on frontmatter)
 const mdPostsGlob = import.meta.glob('../posts/*.md', { eager: true });
 const mdPosts = Object.values(mdPostsGlob);
 const parsedMdPosts = mdPosts
-    .filter((p: any) => p.frontmatter.category === slug || !p.frontmatter.category) // simplistic filter
+    .filter((p: any) => p.frontmatter.category === slug) // simplistic filter
     .map((p: any) => ({
         title: p.frontmatter.title,
         slug: p.frontmatter.slug || p.file.split('/').pop()?.replace('.md', ''),
@@ -43,14 +40,9 @@ const parsedMdPosts = mdPosts
     }));
 
 // Combine and sort
-const allPosts = [...dbPosts, ...parsedMdPosts].sort((a, b) => {
+const allPosts = [...parsedMdPosts].sort((a, b) => {
     return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
 });
-
-if (!category) {
-    // Fallback if category not in DB but we want to show it
-    category = { name: slug?.replace(/-/g, ' ').toUpperCase(), slug };
-}
 
 function formatDate(dateString: string) {
     if (!dateString) return '';
@@ -158,4 +150,3 @@ function formatDate(dateString: string) {
 		line-height: 1.5;
 	}
 </style>
-export const prerender = false;

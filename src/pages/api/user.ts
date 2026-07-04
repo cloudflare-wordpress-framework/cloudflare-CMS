@@ -134,3 +134,49 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return new Response(JSON.stringify({ message: 'Internal Server Error', error: error.message }), { status: 500 });
   }
 };
+
+export const GET: APIRoute = async ({ request }) => {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+
+  if (!env || !env.DB) {
+      return new Response(JSON.stringify({ message: 'Database configuration error' }), { status: 500 });
+  }
+
+  let firebaseUser;
+  try {
+      const apiKey = import.meta.env.FIREBASE_API_KEY;
+      const verifyResponse = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: token })
+        }
+      );
+
+      if (!verifyResponse.ok) throw new Error('Invalid token');
+      const tokenInfo = await verifyResponse.json();
+      if (!tokenInfo.users || tokenInfo.users.length === 0) throw new Error('Invalid token');
+      firebaseUser = tokenInfo.users[0];
+  } catch (err) {
+      return new Response(JSON.stringify({ message: 'Unauthorized - Invalid Token' }), { status: 401 });
+  }
+
+  const uid = firebaseUser.localId;
+  const db = env.DB;
+
+  try {
+      const user = await db.prepare('SELECT * FROM users WHERE firebase_uid = ?').bind(uid).first();
+      if (user) {
+          return new Response(JSON.stringify(user), { status: 200 });
+      }
+      return new Response(JSON.stringify({}), { status: 200 });
+  } catch (error: any) {
+      return new Response(JSON.stringify({ message: 'Internal Server Error' }), { status: 500 });
+  }
+};

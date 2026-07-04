@@ -1,31 +1,11 @@
 ---
+export const prerender = true;
 import Layout from '../themes/vnvda/layouts/Layout.astro';
 import Header from '../themes/vnvda/components/Header.astro';
 import Footer from '../themes/vnvda/components/Footer.astro';
 import Slider from '../themes/vnvda/components/modules/Slider.astro';
 import AboutSection from '../themes/vnvda/components/modules/AboutSection.astro';
 import NewsSection from '../themes/vnvda/components/modules/NewsSection.astro';
-
-import { env } from "cloudflare:workers";
-
-// Fetch dynamic theme settings from D1
-let themeSettings: Record<string, string> = {};
-let dbPosts = [];
-try {
-    // @ts-ignore
-    const db = env.DB;
-    if (db) {
-        const { results: settingsResults } = await db.prepare('SELECT * FROM theme_settings').all();
-        settingsResults.forEach((row: any) => {
-            themeSettings[row.setting_key] = row.setting_value;
-        });
-
-        const { results: postResults } = await db.prepare('SELECT * FROM posts WHERE status = ? ORDER BY published_at DESC LIMIT 6').bind('published').all();
-        dbPosts = postResults;
-    }
-} catch (e) {
-    console.error('Error fetching data from D1:', e);
-}
 
 // Fetch posts from markdown
 const mdPostsGlob = import.meta.glob('./posts/*.md', { eager: true });
@@ -40,7 +20,7 @@ const parsedMdPosts = mdPosts.map(p => ({
 }));
 
 // Combine and sort
-const allPosts = [...dbPosts, ...parsedMdPosts].sort((a, b) => {
+const allPosts = [...parsedMdPosts].sort((a, b) => {
     return new Date(b.published_at).getTime() - new Date(a.published_at).getTime();
 }).slice(0, 6);
 
@@ -59,18 +39,12 @@ const defaultSlideData = [
 ];
 
 let slideData = defaultSlideData;
-if (themeSettings['home_slider']) {
-    try {
-        slideData = JSON.parse(themeSettings['home_slider']);
-    } catch(e) {}
-}
+const aboutTitle = 'Về chúng tôi';
+const aboutContent = 'Hội Bệnh Mạch Máu Việt Nam (VNVDA) là tổ chức xã hội - nghề nghiệp của các cá nhân, tổ chức hoạt động trong lĩnh vực chuyên ngành bệnh mạch máu và các chuyên ngành có liên quan tại Việt Nam.';
+const aboutLinkText = 'Xem thêm';
+const aboutLinkUrl = '/gioi-thieu/lich-su-hinh-thanh/';
 
-const aboutTitle = themeSettings['home_about_title'];
-const aboutContent = themeSettings['home_about_content'];
-const aboutLinkText = themeSettings['home_about_link_text'];
-const aboutLinkUrl = themeSettings['home_about_link_url'];
-
-const newsTitle = themeSettings['home_news_title'];
+const newsTitle = 'Tin tức & Sự kiện nổi bật';
 ---
 
 <Layout title="Trang chủ | Hội Bệnh Mạch Máu Việt Nam">
