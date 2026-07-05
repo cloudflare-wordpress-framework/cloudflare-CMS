@@ -668,7 +668,6 @@ ecmo-so-do-nguyen-ly.webp
 Khi traffic hoặc yêu cầu tăng cao, có thể chuyển nguồn ảnh mà không thay đổi bài viết bằng cách:  
 GitHub / Imgur  
    ↓  
-Cloudflare Images  
 Chỉ cần:
 
 * Map lại base URL  
