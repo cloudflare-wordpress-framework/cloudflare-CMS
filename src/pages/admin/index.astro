@@ -10,7 +10,7 @@ export const prerender = false;
     <title>Astro System Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/editor/editor.main.css" />
+
     <style>
         html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         #app { display: flex; height: 100vh; }
@@ -18,8 +18,7 @@ export const prerender = false;
         .main-content { flex: 1; display: flex; flex-direction: row; background: #f3f4f6; }
         .editor-pane { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #ccc; background: white; }
         .preview-pane { flex: 1; display: flex; flex-direction: column; }
-        #monaco-container { flex: 1; width: 100%; }
-        iframe { flex: 1; width: 100%; border: none; }
+                iframe { flex: 1; width: 100%; border: none; }
         .menu-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #333; }
         .menu-item:hover, .menu-item.active { background: #333; }
         .form-group { margin-bottom: 1rem; }
@@ -41,15 +40,7 @@ export const prerender = false;
             <div class="menu-item" :class="{ active: currentTab === 'categories' }" @click="setTab('categories')">Categories</div>
             <div class="menu-item" :class="{ active: currentTab === 'settings' }" @click="setTab('settings')">Theme Settings</div>
 
-            <div v-if="isLocal">
-                <div class="text-xs text-green-400 px-4 py-2 uppercase tracking-wide mt-4">System Code (Local)</div>
-                <div class="menu-item" :class="{ active: currentTab === 'env' }" @click="setTab('env')">Environment (.env)</div>
-                <div class="menu-item" :class="{ active: currentTab === 'files' }" @click="setTab('files')">File Editor (src)</div>
-            </div>
 
-            <div v-else class="text-xs text-red-400 px-4 py-4 italic mt-4 border-t border-gray-700">
-                Code editing is disabled in production environments.
-            </div>
         </div>
 
         <!-- Main Content -->
@@ -206,22 +197,15 @@ export const prerender = false;
         </div>
     </div>
 
-    <!-- Load Monaco Editor -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
-    <script>
+        <script>
         const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
         createApp({
             setup() {
-                const isLocal = ref(false);
-                const localAdminUrl = 'http://localhost:4000';
-
                 const currentTab = ref('posts');
                 const posts = ref([]);
                 const categories = ref([]);
                 const settings = ref([]);
-                const fileTree = ref([]);
-
                 const editingPost = ref(null);
                 const currentPost = ref({});
 
@@ -231,9 +215,6 @@ export const prerender = false;
                 const editingSetting = ref(null);
                 const currentSetting = ref({});
 
-                const currentFilePath = ref('');
-                let editor = null;
-                const previewIframe = ref(null);
 
                 const tabTitle = computed(() => {
                     switch(currentTab.value) {
@@ -253,15 +234,6 @@ export const prerender = false;
                 };
 
                 // Helper to check if local admin server is running
-                const checkLocalAdmin = async () => {
-                    try {
-                        const res = await fetch(`${localAdminUrl}/api/health`);
-                        if (res.ok) isLocal.value = true;
-                    } catch (e) {
-                        isLocal.value = false;
-                    }
-                };
-
                 const getAuthHeaders = () => {
                     const token = localStorage.getItem('firebaseToken') || '';
                     return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -290,46 +262,11 @@ export const prerender = false;
                     handleApiError(res);
                     if (res.ok) settings.value = await res.json();
                 }
-
-                const fetchFileTree = async () => {
-                    if (!isLocal.value) return;
-                    const res = await fetch(`${localAdminUrl}/api/files/tree`);
-                    const data = await res.json();
-                    fileTree.value = data.tree;
-                };
-
-                const flattenTree = (nodes, depth = 0) => {
-                    let flat = [];
-                    if (!nodes) return flat;
-                    for (const node of nodes) {
-                        if (currentTab.value === 'files' && depth === 0 && !['src', 'forms', 'public', 'scripts', 'astro.config.mjs', 'package.json'].includes(node.name)) {
-                            continue;
-                        }
-                        flat.push({ ...node, depth });
-                        if (node.children) {
-                            flat = flat.concat(flattenTree(node.children, depth + 1));
-                        }
-                    }
-                    return flat;
-                };
-
                 const setTab = async (tab) => {
                     currentTab.value = tab;
                     if (tab === 'posts') fetchPosts();
                     if (tab === 'categories') fetchCategories();
                     if (tab === 'settings') fetchSettings();
-
-                    if (tab === 'env' && isLocal.value) {
-                        const res = await fetch(`${localAdminUrl}/api/env`);
-                        const data = await res.json();
-                        currentFilePath.value = '.env';
-                        setupMonaco(data.content, 'shell');
-                    }
-                    if (tab === 'files' && isLocal.value) {
-                        fetchFileTree();
-                        currentFilePath.value = '';
-                        setupMonaco('// Select a file from the explorer above\n', 'javascript');
-                    }
                 };
 
                 const createNewPost = () => {
@@ -435,81 +372,17 @@ export const prerender = false;
                         fetchSettings();
                         reloadPreview();
                     }
-                };
-
-                const loadFile = async (path) => {
-                    if (!isLocal.value) return;
-                    const res = await fetch(`${localAdminUrl}/api/files?path=${encodeURIComponent(path)}`);
-                    const data = await res.json();
-                    currentFilePath.value = path;
-
-                    let language = 'plaintext';
-                    if (path.endsWith('.js') || path.endsWith('.ts') || path.endsWith('.mjs')) language = 'javascript';
-                    if (path.endsWith('.json')) language = 'json';
-                    if (path.endsWith('.css')) language = 'css';
-                    if (path.endsWith('.html') || path.endsWith('.astro')) language = 'html';
-                    if (path.endsWith('.sql')) language = 'sql';
-
-                    setupMonaco(data.content, language);
-                };
-
-                const saveFile = async () => {
-                    if (!editor || !currentFilePath.value || !isLocal.value) return;
-                    const content = editor.getValue();
-
-                    if (currentTab.value === 'env') {
-                        await fetch(`${localAdminUrl}/api/env`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ content })
-                        });
-                        alert('.env saved! Please restart Astro server manually for env changes to take full effect.');
-                    } else {
-                        await fetch(`${localAdminUrl}/api/files`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ path: currentFilePath.value, content })
-                        });
-                        setTimeout(reloadPreview, 500);
-                    }
-                };
-
-                const setupMonaco = (code, language) => {
-                    if (!window.monaco) return;
-                    const container = document.getElementById('monaco-container');
-                    if (editor) {
-                        editor.setValue(code);
-                        window.monaco.editor.setModelLanguage(editor.getModel(), language);
-                    } else {
-                        editor = window.monaco.editor.create(container, {
-                            value: code,
-                            language: language,
-                            theme: 'vs-dark',
-                            automaticLayout: true,
-                            minimap: { enabled: false }
-                        });
-                    }
-                };
-
-                onMounted(() => {
-                    checkLocalAdmin().then(() => {
-                        fetchPosts();
-                    });
-
-                    // Initialize Monaco Editor
-                    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
-                    require(['vs/editor/editor.main'], function() {
-                        // Ready
-                    });
+                };                onMounted(() => {
+                    fetchPosts();
                 });
 
                 return {
-                    isLocal, currentTab, posts, categories, settings, fileTree,
+                    currentTab, posts, categories, settings,
                     editingPost, currentPost,
                     editingCategory, currentCategory,
                     editingSetting, currentSetting,
-                    tabTitle, previewIframe, currentFilePath,
-                    setTab, reloadPreview, flattenTree, loadFile, saveFile,
+                    tabTitle, previewIframe,
+                    setTab, reloadPreview,
                     createNewPost, editPost, savePost, deletePost,
                     createNewCategory, editCategory, saveCategory, deleteCategory,
                     createNewSetting, editSetting, saveSetting
