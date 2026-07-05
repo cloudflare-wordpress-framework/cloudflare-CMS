@@ -1,5 +1,5 @@
 ---
-import AuthLayout from "../../layouts/AuthLayout.astro";
+import AuthLayout from "../layouts/AuthLayout.astro";
 export const prerender = true;
 ---
 
@@ -24,7 +24,7 @@ export const prerender = true;
   </main>
 
   <script>
-    import { auth } from '../../lib/services/firebaseClient';
+    import { auth } from '../lib/services/firebaseClient';
     import {
       signInWithEmailAndPassword,
       GoogleAuthProvider,
