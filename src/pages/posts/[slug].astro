@@ -1,8 +1,8 @@
 ---
 export const prerender = true;
-import PublicLayout from '../../../layouts/PublicLayout.astro';
-import Header from '../../../components/layout/Header.astro';
-import Footer from '../../../components/layout/Footer.astro';
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
 
 export async function getStaticPaths() {
     const mdPostsGlob = import.meta.glob('./*.md', { eager: true });

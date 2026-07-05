@@ -1,11 +1,11 @@
 ---
 export const prerender = true;
-import PublicLayout from '../../layouts/PublicLayout.astro';
-import Header from '../../components/layout/Header.astro';
-import Footer from '../../components/layout/Footer.astro';
-import Slider from '../../components/ui/Slider.astro';
-import AboutSection from '../../components/ui/AboutSection.astro';
-import NewsSection from '../../components/ui/NewsSection.astro';
+import PublicLayout from '../layouts/PublicLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import Slider from '../components/ui/Slider.astro';
+import AboutSection from '../components/ui/AboutSection.astro';
+import NewsSection from '../components/ui/NewsSection.astro';
 
 // Fetch posts from markdown
 const mdPostsGlob = import.meta.glob('./posts/*.md', { eager: true });

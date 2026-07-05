@@ -421,6 +421,7 @@ tag\_id
 ---
 
 
+
 # **Cấu trúc mã nguồn (Enterprise Template)**
 
 Được thiết kế theo tiêu chuẩn Enterprise, tách biệt hoàn toàn UI - logic - data - middleware - API, dễ dàng mở rộng không giới hạn:
@@ -430,15 +431,18 @@ project/
 │
 ├── src/
 │   ├── pages/                     # Routing layer
-│   │   ├── (public)/              # Các trang hiển thị public (Trang chủ, bài viết, danh mục)
-│   │   ├── (auth)/                # Các trang xác thực (login, signup)
-│   │   ├── (dashboard)/           # Các trang yêu cầu đăng nhập, quản trị (admin, account)
+│   │   ├── index.astro            # Trang chủ
+│   │   ├── login.astro            # Trang đăng nhập
+│   │   ├── signup.astro           # Trang đăng ký
+│   │   ├── account.astro          # Quản trị account
+│   │   ├── admin/                 # Quản trị CMS
+│   │   ├── category/              # Chuyên mục
+│   │   ├── posts/                 # Bài viết
 │   │   ├── api/                   # API routes (SSR) được phân chia theo module
 │   │   │   ├── auth/
 │   │   │   ├── user/
 │   │   │   ├── cms/
 │   │   │   └── post/
-│   │   └── errors/                # Trang lỗi (404, 500)
 │   │
 │   ├── components/                # UI components (Hoàn toàn tách biệt logic)
 │   │   ├── ui/                    # Các module hiển thị giao diện chính (Slider, News, About)
@@ -514,17 +518,14 @@ project/
    - **Logic:** Đặt tại `src/lib/services/` và `src/lib/server/`. Astro components hoặc API routes sẽ import service để gọi hàm thực thi nghiệp vụ (ví dụ: `userService.getProfile()`).
    - **Data:** Truy xuất thông qua Service layer, không viết query SQL hoặc Firebase SDK trực tiếp rải rác khắp UI components.
 
-3. **Routing theo Group**
-   Astro Pages sử dụng "Route Groups" (những thư mục bọc trong dấu ngoặc đơn như `(public)`, `(auth)`). Cấu trúc này không ảnh hưởng đến URL xuất ra (ví dụ trang public/index.astro vẫn là `/`) nhưng cho phép nhóm các trang có chung Layout và Middleware một cách logic.
-
-4. **Middleware Pipeline Chuyên Nghiệp**
+3. **Middleware Pipeline Chuyên Nghiệp**
    Sử dụng tính năng `sequence()` của Astro trong `src/middleware/index.ts`. Các request đi vào hệ thống sẽ phải đi qua một luồng pipeline (giống Express.js):
    `Request -> Security -> Logging -> i18n -> Auth Guard -> Trả về Route Handler`. Giúp hệ thống an toàn và dễ dàng mở rộng bộ lọc.
 
-5. **Server-only Utilities**
+4. **Server-only Utilities**
    Bất kỳ đoạn code nào tương tác nhạy cảm với D1, mã hóa, hoặc xác thực cấp quyền được khoanh vùng nghiêm ngặt trong `src/lib/server/`. Cơ chế của Astro đảm bảo code ở đây không bao giờ rò rỉ (leak) xuống client bundle.
 
-6. **Quản lý Cấu hình Tập trung (Config Layer)**
+5. **Quản lý Cấu hình Tập trung (Config Layer)**
    Các file cấu hình quan trọng được gom về thư mục `/config/`. File `astro.config.mjs` ở root chỉ đóng vai trò proxy export từ `/config/astro.config.mjs`. Giúp root thư mục gọn gàng, phù hợp môi trường đa dự án (multi-environment).
 
 # **Khả năng mở rộng tương lai**
