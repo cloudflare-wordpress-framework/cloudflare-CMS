@@ -1,0 +1,45 @@
+---
+export const prerender = true;
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import Header from '../../components/layout/Header.astro';
+import Footer from '../../components/layout/Footer.astro';
+---
+
+<PublicLayout title="Hội Phí | Hội Bệnh Mạch Máu Việt Nam">
+	<Header />
+	<main class="page-content">
+		<div class="container">
+			<h1>Hội Phí</h1>
+			<div class="content">
+				<p>Nội dung đang được cập nhật...</p>
+			</div>
+		</div>
+	</main>
+	<Footer />
+</PublicLayout>
+
+<style>
+    main {
+        flex: 1;
+    }
+    .page-content {
+        padding: 40px 0;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    h1 {
+        color: var(--vnvda-blue);
+        margin-bottom: 30px;
+        font-size: 2rem;
+        border-bottom: 2px solid var(--vnvda-blue);
+        padding-bottom: 10px;
+        display: inline-block;
+    }
+    .content {
+        line-height: 1.6;
+        color: #333;
+    }
+</style>
