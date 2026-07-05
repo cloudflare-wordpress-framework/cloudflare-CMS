@@ -1,1 +1,6 @@
-/* Theme styles */
+:root {
+    --vnvda-blue: #0056b3;
+    --vnvda-light-blue: #e7f1ff;
+    --vnvda-text: #333333;
+    --vnvda-bg: #ffffff;
+}

@@ -9,8 +9,7 @@
     "sync-env": "node scripts/sync-env.js",
     "sync-schema": "node scripts/sync-db-schema.js",
     "dev:astro": "npm run sync-env && npm run sync-schema && astro dev",
-    "dev:admin": "node admin-server/index.js",
-    "dev": "concurrently \"npm run dev:astro\" \"npm run dev:admin\"",
+    "dev": "npm run dev:astro",
     "build": "npm run sync-env && npm run sync-schema && astro build",
     "preview": "npm run sync-env && astro preview",
     "astro": "astro",
@@ -29,10 +28,5 @@
     "vue": "^3.5.39",
     "wrangler": "^4.105.0",
     "zod": "^4.4.3"
-  },
-  "devDependencies": {
-    "concurrently": "^10.0.3",
-    "cors": "^2.8.6",
-    "express": "^5.2.1"
   }
 }
