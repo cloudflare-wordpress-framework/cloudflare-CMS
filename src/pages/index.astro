@@ -6,6 +6,7 @@ import Footer from '../components/layout/Footer.astro';
 import Slider from '../components/ui/Slider.astro';
 import AboutSection from '../components/ui/AboutSection.astro';
 import NewsSection from '../components/ui/NewsSection.astro';
+import CategoryPostsAjax from '../components/ui/CategoryPostsAjax.astro';
 
 // Fetch posts from markdown
 const mdPostsGlob = import.meta.glob('./posts/*.md', { eager: true });
@@ -66,6 +67,12 @@ const newsTitle = 'Tin tức & Sự kiện nổi bật';
             title={newsTitle}
             posts={allPosts}
         />
+
+		<CategoryPostsAjax
+			title="Bài viết Tổ chức"
+			categorySlug="to-chuc"
+			limit={3}
+		/>
 	</main>
 
 	<Footer />

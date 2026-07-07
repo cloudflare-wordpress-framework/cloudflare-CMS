@@ -21,6 +21,7 @@ Mỗi bài viết cần bắt đầu bằng phần thông tin siêu dữ liệu 
 ---
 title: "Tiêu đề bài viết của bạn"
 slug: "tieu-de-bai-viet-cua-ban"
+category: "chuyen-muc-bai-viet"
 excerpt: "Một đoạn mô tả ngắn gọn về nội dung bài viết..."
 published_at: "YYYY-MM-DDTHH:MM:SSZ"
 image: "/duong-dan-toi-anh-dai-dien.jpg"
@@ -34,6 +35,7 @@ Nội dung chi tiết của bài viết được viết bằng cú pháp Markdow
 **Giải thích các trường:**
 - `title`: Tiêu đề bài viết (hiển thị trên trang web).
 - `slug`: Đường dẫn URL của bài viết. Cần giống với tên file (không có `.md`).
+- `category`: Chuyên mục của bài viết. Phải viết thường, không dấu, và sử dụng dấu gạch ngang (VD: `to-chuc`, `cong-tac-hoi`). Bạn có thể xem các chuyên mục có sẵn trên thanh menu.
 - `excerpt`: Tóm tắt nội dung bài viết.
 - `published_at`: Thời gian xuất bản bài viết theo định dạng ISO 8601 (VD: `2024-05-01T00:00:00Z`).
 - `image`: Đường dẫn đến ảnh đại diện của bài viết. Có thể để trống `""` nếu không có.

@@ -1,0 +1,61 @@
+---
+import PublicLayout from './PublicLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+
+const { frontmatter } = Astro.props;
+---
+
+<PublicLayout title={`${frontmatter.title} | Hội Bệnh Mạch Máu Việt Nam`}>
+    <Header />
+
+    <main class="page-content">
+        <div class="container">
+            <article class="markdown-body">
+                <h1>{frontmatter.title}</h1>
+                <slot />
+            </article>
+        </div>
+    </main>
+
+    <Footer />
+</PublicLayout>
+
+<style>
+    .page-content {
+        padding: 40px 0;
+        min-height: 50vh;
+    }
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+    .markdown-body {
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        color: #333;
+        line-height: 1.6;
+    }
+    .markdown-body h1 {
+        color: var(--vnvda-blue);
+        margin-top: 0;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--vnvda-blue);
+        display: inline-block;
+    }
+    .markdown-body h2 {
+        color: var(--vnvda-blue);
+        margin-top: 30px;
+    }
+    .markdown-body p {
+        margin-bottom: 15px;
+    }
+    .markdown-body ul, .markdown-body ol {
+        margin-bottom: 20px;
+        padding-left: 20px;
+    }
+</style>
