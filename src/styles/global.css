@@ -14,7 +14,30 @@ body {
 * {
     box-sizing: border-box;
 }
-img {
+img, video, iframe {
     max-width: 100%;
     height: auto;
+}
+
+/* Responsive Container */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Typography Scaling */
+html {
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 0 0.5rem;
+    }
 }
