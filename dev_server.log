@@ -1,0 +1,30 @@
+
+> afraid-atmosphere@0.0.1 dev
+> npm run dev:astro
+
+
+> afraid-atmosphere@0.0.1 dev:astro
+> npm run sync-env && npm run sync-schema && astro dev
+
+
+> afraid-atmosphere@0.0.1 sync-env
+> node scripts/sync-env.js
+
+Successfully synced .env to wrangler.jsonc
+
+> afraid-atmosphere@0.0.1 sync-schema
+> node scripts/sync-db-schema.js
+
+Successfully generated user_schema.sql from forms/user.schema.json
+(node:85071) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+11:21:20 [@astrojs/cloudflare] Enabling image processing with Cloudflare Images for production with the "IMAGES" Images binding.
+11:21:20 [@astrojs/cloudflare] Enabling sessions with Cloudflare KV with the "SESSION" KV binding.
+11:21:20 [vite] connected.
+11:21:21 [vite] Re-optimizing dependencies because vite config has changed
+11:21:25 [types] Generated 1ms
+11:21:25 [vite] Re-optimizing dependencies because vite config has changed
+ astro  v7.0.3 ready in 8810 ms
+┃ Local    http://localhost:4321/
+┃ Network  use --host to expose
+11:21:26 watching for file changes...
